@@ -231,34 +231,3 @@ function createPostsRouter(db) {
 }
 
 module.exports = { createPostsRouter };
-
-// UPDATE post
-router.put("/:id", async (req, res) => {
-  try {
-    const { ObjectId } = require("mongodb");
-
-    const id = req.params.id;
-
-    const update = {
-      itemName: req.body.itemName,
-      category: req.body.category,
-      expectation: req.body.expectation,
-      reality: req.body.reality,
-      sentiment: req.body.sentiment,
-      imageUrl: req.body.imageUrl,
-      updatedAt: new Date(),
-    };
-
-    const result = await posts.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: update }
-    );
-
-    res.json({ ok: true });
-
-  } catch (err) {
-
-    res.status(500).json({ error: "Update failed" });
-
-  }
-});
