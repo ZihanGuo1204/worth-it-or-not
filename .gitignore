@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# env
+.env
+**/.env
+
+# uploads
+server/uploads/
+uploads/
+
+# system
+.DS_Store
+
+# logs
+npm-debug.log*

@@ -1,7 +1,4 @@
-// client/pages/home.js
-// FINAL version — VisionOS style cards + filters
-
-import { fetchPosts, deletePost, updatePost } from "../api.js";
+import { fetchPosts, deletePost } from "../api.js";
 import { escapeHtml } from "../utils.js";
 
 const LS_PROFILE_ID = "won_profile_id";
@@ -190,7 +187,8 @@ export async function renderHome(container) {
     modal.querySelector(".postModalTitle").textContent = title;
     modal.querySelector(".postModalBy").textContent = by ? `(by ${by})` : "";
     modal.querySelector('[data-role="category"]').textContent = `Category: ${category}`;
-    modal.querySelector('[data-role="sentiment"]').textContent = `Sentiment: ${sentiment}`;
+    modal.querySelector('[data-role="sentiment"]').textContent =
+      `Sentiment: ${sentiment}`;
     modal.querySelector('[data-role="expectation"]').textContent = expectation;
     modal.querySelector('[data-role="reality"]').textContent = reality;
 

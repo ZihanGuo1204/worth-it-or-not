@@ -19,7 +19,12 @@ async function connectDb(uri) {
   db = client.db(); // uses db name from URI
   console.log("✅ MongoDB connected");
   console.log("   DB NAME =", db.databaseName);
-  console.log("   HOST(S) =", client.topology?.s?.description?.servers ? [...client.topology.s.description.servers.keys()] : "unknown");
+  console.log(
+    "   HOST(S) =",
+    client.topology?.s?.description?.servers
+      ? [...client.topology.s.description.servers.keys()]
+      : "unknown"
+  );
   return db;
 }
 

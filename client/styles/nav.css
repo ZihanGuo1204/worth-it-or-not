@@ -25,20 +25,32 @@ nav.topNav .navInner {
   gap: 16px;
 }
 
-.navLeft { justify-self: start; }
-.navRight { justify-self: end; display: flex; align-items: center; gap: 10px; }
+.navLeft {
+  justify-self: start;
+}
+.navRight {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-.brand { display: inline-flex; align-items: center; }
+.brand {
+  display: inline-flex;
+  align-items: center;
+}
 .brandTitle {
   font-family: var(--title-font);
-  font-size: 30px;      /* ✅ bigger */
-  font-weight: 900;     /* ✅ bolder */
+  font-size: 30px; /* ✅ bigger */
+  font-weight: 900; /* ✅ bolder */
   letter-spacing: -0.02em;
   line-height: 1;
   user-select: none;
 }
 
-html[data-theme="light"] .brandTitle { color: #1d1d1f; }
+html[data-theme="light"] .brandTitle {
+  color: #1d1d1f;
+}
 html[data-theme="dark"] .brandTitle {
   background: linear-gradient(180deg, #ffffff, #cfd0d6);
   -webkit-background-clip: text;
@@ -73,14 +85,17 @@ a.navPill {
   letter-spacing: -0.01em;
   text-decoration: none !important;
 
-  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease,
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease,
     box-shadow 140ms ease;
 }
 
 a.navPill:hover {
   transform: translateY(-1px);
   background: var(--navTileHover);
-  border-color: rgba(10, 132, 255, 0.30);
+  border-color: rgba(10, 132, 255, 0.3);
   box-shadow: var(--shadow-soft);
 }
 
@@ -119,7 +134,10 @@ button.iconBtn {
   justify-content: center;
 
   box-shadow: var(--shadow-soft);
-  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease;
 }
 
 button.iconBtn:hover {
@@ -128,7 +146,9 @@ button.iconBtn:hover {
   border-color: rgba(10, 132, 255, 0.35);
 }
 
-button.iconBtn:active { transform: translateY(0px) scale(0.98); }
+button.iconBtn:active {
+  transform: translateY(0px) scale(0.98);
+}
 
 /* Mobile: stack nicely */
 @media (max-width: 720px) {
@@ -142,5 +162,7 @@ button.iconBtn:active { transform: translateY(0px) scale(0.98); }
     justify-self: start;
     flex-wrap: wrap;
   }
-  .brandTitle { font-size: 26px; }
+  .brandTitle {
+    font-size: 26px;
+  }
 }

@@ -12,7 +12,7 @@
   "description": "",
   "dependencies": {
     "dotenv": "^17.3.1",
-    "express": "^5.2.1",
+    "express": "^4.22.1",
     "mongodb": "^5.9.2",
     "multer": "^2.0.2"
   },

@@ -1,6 +1,3 @@
-// client/pages/profile.js
-// Profile page (matches styles.css: .page/.formCard/.summaryRow)
-
 import { createProfile, fetchPosts } from "../api.js";
 
 const LS_PROFILE_ID = "won_profile_id";
@@ -90,7 +87,9 @@ export async function renderProfile(container) {
       msgEl.textContent = `Saved ✅ Hi, ${profile.nickname}!`;
       await loadAndRenderSummary(summaryEl, profile._id);
     } catch (err) {
-      msgEl.textContent = err?.message ? `Save failed ❌ ${err.message}` : "Save failed ❌";
+      msgEl.textContent = err?.message
+        ? `Save failed ❌ ${err.message}`
+        : "Save failed ❌";
     }
   });
 

@@ -91,7 +91,8 @@ function createProfilesRouter(db) {
       if (!ObjectId.isValid(id)) return res.status(400).json({ error: "invalid id" });
 
       const result = await profiles.deleteOne({ _id: new ObjectId(id) });
-      if (result.deletedCount === 0) return res.status(404).json({ error: "profile not found" });
+      if (result.deletedCount === 0)
+        return res.status(404).json({ error: "profile not found" });
 
       return res.json({ ok: true });
     } catch (err) {

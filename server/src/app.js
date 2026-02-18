@@ -18,7 +18,7 @@ const app = express();
 app.use(express.static(path.join(__dirname, "../../client")));
 
 // serve uploaded images
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 app.use(express.json());
 
 // health (no DB needed)

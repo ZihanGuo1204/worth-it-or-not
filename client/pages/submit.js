@@ -1,6 +1,3 @@
-// client/pages/submit.js
-// Submit page (matches styles.css: .page/.formCard/.formGrid)
-
 import { createPost } from "../api.js";
 import { escapeHtml } from "../utils.js";
 
@@ -202,7 +199,9 @@ export function renderSubmit(container) {
         window.location.hash = "#/";
       }, 600);
     } catch (err) {
-      msg.textContent = err?.message ? `Submit failed ❌ ${err.message}` : "Submit failed ❌";
+      msg.textContent = err?.message
+        ? `Submit failed ❌ ${err.message}`
+        : "Submit failed ❌";
     }
   });
 }
