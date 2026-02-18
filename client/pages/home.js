@@ -1,4 +1,4 @@
-import { fetchPosts, deletePost } from "../api.js";
+import { fetchPosts, deletePost, updatePost } from "../api.js";
 import { escapeHtml } from "../utils.js";
 
 const LS_PROFILE_ID = "won_profile_id";
@@ -228,8 +228,48 @@ export async function renderHome(container) {
       }
 
       if (btn.classList.contains("editBtn")) {
-        // edit flow can be wired here later
-      }
+  const card = btn.closest("article.post");
+  if (!card) return;
+
+  const currentItemName = card.dataset.itemname || "";
+  const currentCategory = card.dataset.category || "";
+  const currentSentiment = card.dataset.sentiment || "";
+  const currentExpectation = card.dataset.expectation || "";
+  const currentReality = card.dataset.reality || "";
+
+  const itemName = prompt("Edit item name:", currentItemName);
+  if (itemName === null) return;
+
+  const category = prompt("Edit category:", currentCategory);
+  if (category === null) return;
+
+  const sentiment = prompt(
+    "Edit sentiment (worth / not_worth / meh):",
+    currentSentiment
+  );
+  if (sentiment === null) return;
+
+  const expectation = prompt("Edit expectation:", currentExpectation);
+  if (expectation === null) return;
+
+  const reality = prompt("Edit reality:", currentReality);
+  if (reality === null) return;
+
+  try {
+    await updatePost(id, {
+      itemName,
+      category,
+      sentiment,
+      expectation,
+      reality,
+    });
+    await loadPosts();
+  } catch (err) {
+    alert(err.message || "Edit failed");
+  }
+
+  return;
+}
 
       return;
     }
