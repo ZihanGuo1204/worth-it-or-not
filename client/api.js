@@ -73,3 +73,20 @@ export async function updatePost(postId, patch) {
 
   return res.json();
 }
+
+export async function uploadImage(file) {
+  const fd = new FormData();
+  fd.append("image", file);
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: fd,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Upload failed");
+  }
+
+  return res.json(); // { imageUrl: "/uploads/xxx.jpg" }
+}

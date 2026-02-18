@@ -2,6 +2,7 @@
 // Submit page (matches styles.css: .page/.formCard/.formGrid)
 
 import { createPost } from "../api.js";
+import { escapeHtml } from "../utils.js";
 
 const LS_PROFILE_ID = "won_profile_id";
 const LS_PROFILE_NAME = "won_profile_name";
@@ -46,6 +47,17 @@ export function renderSubmit(container) {
           </div>
 
           <div>
+            <label>Photo (optional)</label>
+            <input id="photo" type="file" accept="image/*" />
+            <p id="uploadMsg" class="msg"></p>
+            <img
+              id="photoPreview"
+              alt="preview"
+              style="display:none; width:100%; max-height:260px; object-fit:cover; border-radius:16px; border:1px solid var(--border);"
+            />
+          </div>
+
+          <div>
             <label>Expectation</label>
             <textarea name="expectation" rows="3" placeholder="What you thought would happen..." required></textarea>
           </div>
@@ -65,7 +77,7 @@ export function renderSubmit(container) {
           </div>
 
           <div class="btnRow">
-            <button class="primary" type="submit">Submit</button>
+            <button id="submitBtn" class="primary" type="submit">Submit</button>
             <button id="resetBtn" type="button">Clear</button>
           </div>
 
@@ -78,30 +90,113 @@ export function renderSubmit(container) {
   const form = document.getElementById("postForm");
   const msg = document.getElementById("msg");
   const resetBtn = document.getElementById("resetBtn");
+  const submitBtn = document.getElementById("submitBtn");
+
+  // Upload UI
+  const photoInput = document.getElementById("photo");
+  const uploadMsg = document.getElementById("uploadMsg");
+  const preview = document.getElementById("photoPreview");
+
+  let uploadedImageUrl = null;
+  let uploading = false;
+
+  function setUploading(state) {
+    uploading = state;
+    submitBtn.disabled = state;
+    photoInput.disabled = state;
+  }
+
+  function clearUploadUI() {
+    uploadedImageUrl = null;
+    uploadMsg.textContent = "";
+    preview.src = "";
+    preview.style.display = "none";
+    // allow choosing the same file again
+    photoInput.value = "";
+  }
+
+  photoInput.addEventListener("change", async () => {
+    const file = photoInput.files?.[0];
+    if (!file) return;
+
+    // Optional: simple client-side check
+    if (!file.type.startsWith("image/")) {
+      uploadMsg.textContent = "❌ Please choose an image file.";
+      clearUploadUI();
+      return;
+    }
+
+    uploadMsg.textContent = "Uploading...";
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const reason = data?.error || `Upload failed (HTTP ${res.status})`;
+        throw new Error(reason);
+      }
+
+      uploadedImageUrl = data.imageUrl || null;
+
+      if (!uploadedImageUrl) {
+        throw new Error("Upload succeeded but no imageUrl returned.");
+      }
+
+      uploadMsg.textContent = "✅ Uploaded";
+      preview.src = uploadedImageUrl;
+      preview.style.display = "block";
+    } catch (err) {
+      uploadedImageUrl = null;
+      preview.style.display = "none";
+      uploadMsg.textContent = `❌ ${err?.message || "Upload failed"}`;
+    } finally {
+      setUploading(false);
+    }
+  });
 
   resetBtn.addEventListener("click", () => {
     form.reset();
     msg.textContent = "";
+    clearUploadUI();
   });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    if (uploading) {
+      msg.textContent = "Please wait for the image upload to finish...";
+      return;
+    }
+
     msg.textContent = "Submitting...";
 
     const data = new FormData(form);
+
     const post = {
-      itemName: data.get("itemName").trim(),
-      category: data.get("category").trim(),
-      expectation: data.get("expectation").trim(),
-      reality: data.get("reality").trim(),
+      itemName: String(data.get("itemName") || "").trim(),
+      category: String(data.get("category") || "").trim(),
+      expectation: String(data.get("expectation") || "").trim(),
+      reality: String(data.get("reality") || "").trim(),
       sentiment: data.get("sentiment"),
       profileId,
+      imageUrl: uploadedImageUrl, // ⭐ attach uploaded url (or null)
     };
 
     try {
       await createPost(post);
       msg.textContent = "Posted ✅ Redirecting to Home...";
+
       form.reset();
+      clearUploadUI();
 
       setTimeout(() => {
         window.location.hash = "#/";
@@ -109,12 +204,5 @@ export function renderSubmit(container) {
     } catch (err) {
       msg.textContent = err?.message ? `Submit failed ❌ ${err.message}` : "Submit failed ❌";
     }
-  });
-}
-
-function escapeHtml(str) {
-  return String(str ?? "").replace(/[&<>"']/g, (ch) => {
-    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-    return map[ch] || ch;
   });
 }

@@ -2,11 +2,11 @@
 // FINAL version — VisionOS style cards + filters
 
 import { fetchPosts, deletePost, updatePost } from "../api.js";
+import { escapeHtml } from "../utils.js";
 
 const LS_PROFILE_ID = "won_profile_id";
 
 export async function renderHome(container) {
-
   const profileId = localStorage.getItem(LS_PROFILE_ID);
 
   container.innerHTML = `
@@ -55,143 +55,193 @@ export async function renderHome(container) {
     </div>
   `;
 
-
   const postsEl = document.getElementById("posts");
-
   const mineOnlyEl = document.getElementById("mineOnly");
-
   const categoryInputEl = document.getElementById("categoryInput");
 
-
   async function loadPosts() {
-
     const category = categoryInputEl.value.trim();
-
     const mineOnly = mineOnlyEl.checked;
 
-
     const posts = await fetchPosts({
-
       category: category || undefined,
-
       profileId: mineOnly ? profileId : undefined,
-
     });
 
-
     if (!posts.length) {
-
       postsEl.innerHTML = `<p class="empty">No posts yet.</p>`;
-
       return;
-
     }
 
+    postsEl.innerHTML = posts
+      .map((p) => {
+        const canEdit = profileId === p.profileId;
 
-    postsEl.innerHTML = posts.map(p => {
+        const preview = p.expectation || "";
+        const safeTitle = escapeHtml(p.itemName);
+        const safeCategory = escapeHtml(p.category);
+        const safeSentiment = escapeHtml(p.sentiment);
+        const safeBy = escapeHtml(p.author?.nickname || "unknown");
 
-      const canEdit = profileId === p.profileId;
+        return `
+    <article class="post"
+      data-id="${p._id}"
+      data-itemname="${safeTitle}"
+      data-category="${safeCategory}"
+      data-sentiment="${safeSentiment}"
+      data-by="${safeBy}"
+      data-expectation="${escapeHtml(p.expectation || "")}"
+      data-reality="${escapeHtml(p.reality || "")}"
+      data-imageurl="${escapeHtml(p.imageUrl || "")}"
+    >
 
-      return `
+      ${
+        p.imageUrl
+          ? `
+        <img class="postImage" src="${p.imageUrl}" alt="${safeTitle}" loading="lazy" />
+      `
+          : ""
+      }
 
-        <article class="post">
+      <div class="postBody">
+        <h3 class="postTitle">${safeTitle}</h3>
 
-          <div class="postTop">
+        <div class="postMeta">
+          <span class="pill">Category: ${safeCategory}</span>
+          <span class="pill">Sentiment: ${safeSentiment}</span>
+        </div>
 
-            <h3 class="title">
+        <p class="postPreview">${escapeHtml(preview)}</p>
 
-              ${p.itemName}
-
-              <span class="by">(by ${p.author?.nickname || "unknown"})</span>
-
-            </h3>
-
-            <div class="actions">
-
-              ${canEdit ? `<button class="editBtn" data-id="${p._id}">Edit</button>` : ""}
-
-              ${canEdit ? `<button class="deleteBtn" data-id="${p._id}">Delete</button>` : ""}
-
-            </div>
-
-          </div>
-
-
-          <div class="meta">
-
-            <span class="pill">Category: ${p.category}</span>
-
-            <span class="pill">Sentiment: ${p.sentiment}</span>
-
-          </div>
-
-
-          <div class="twoCol">
-
-            <div class="box">
-
-              <div class="label">Expectation</div>
-
-              <div class="text">${p.expectation}</div>
-
-            </div>
-
-
-            <div class="box">
-
-              <div class="label">Reality</div>
-
-              <div class="text">${p.reality}</div>
-
-            </div>
-
-          </div>
-
-        </article>
-
-      `;
-
-    }).join("");
-
+        <div class="actions" style="margin-top:auto; display:flex; gap:10px; justify-content:flex-end;">
+          ${canEdit ? `<button class="editBtn" data-id="${p._id}">Edit</button>` : ""}
+          ${canEdit ? `<button class="deleteBtn" data-id="${p._id}">Delete</button>` : ""}
+        </div>
+      </div>
+    </article>
+  `;
+      })
+      .join("");
   }
 
+  // ===== Post detail modal (create once) =====
+  let modal = document.getElementById("postModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "postModal";
+    modal.className = "postModal";
+    modal.innerHTML = `
+    <div class="postModalCard" role="dialog" aria-modal="true" aria-label="Post detail">
+      <button class="postModalClose" type="button" aria-label="Close">✕</button>
+      <div class="postModalImgWrap">
+        <img class="postModalImg" alt="post image" style="display:none;" />
+      </div>
+      <div class="postModalBody">
+        <div class="postModalTitleRow">
+          <div>
+            <h2 class="postModalTitle"></h2>
+            <span class="postModalBy"></span>
+          </div>
+        </div>
+
+        <div class="postModalMeta">
+          <span class="pill" data-role="category"></span>
+          <span class="pill" data-role="sentiment"></span>
+        </div>
+
+        <div class="postModalSection">
+          <div class="label">Expectation</div>
+          <div class="text" data-role="expectation"></div>
+        </div>
+
+        <div class="postModalSection">
+          <div class="label">Reality</div>
+          <div class="text" data-role="reality"></div>
+        </div>
+      </div>
+    </div>
+  `;
+    document.body.appendChild(modal);
+  }
+
+  function closePostModal() {
+    modal.classList.remove("open");
+  }
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closePostModal();
+  });
+
+  modal.querySelector(".postModalClose").addEventListener("click", closePostModal);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closePostModal();
+  });
+
+  function openModalFromCard(card) {
+    const title = card.dataset.itemname || "";
+    const by = card.dataset.by || "";
+    const category = card.dataset.category || "";
+    const sentiment = card.dataset.sentiment || "";
+    const expectation = card.dataset.expectation || "";
+    const reality = card.dataset.reality || "";
+    const imageUrl = card.dataset.imageurl || "";
+
+    modal.querySelector(".postModalTitle").textContent = title;
+    modal.querySelector(".postModalBy").textContent = by ? `(by ${by})` : "";
+    modal.querySelector('[data-role="category"]').textContent = `Category: ${category}`;
+    modal.querySelector('[data-role="sentiment"]').textContent = `Sentiment: ${sentiment}`;
+    modal.querySelector('[data-role="expectation"]').textContent = expectation;
+    modal.querySelector('[data-role="reality"]').textContent = reality;
+
+    const img = modal.querySelector(".postModalImg");
+    if (imageUrl) {
+      img.src = imageUrl;
+      img.style.display = "block";
+    } else {
+      img.removeAttribute("src");
+      img.style.display = "none";
+    }
+
+    modal.classList.add("open");
+  }
 
   document.getElementById("filterBtn").onclick = loadPosts;
 
   document.getElementById("clearBtn").onclick = () => {
-
     categoryInputEl.value = "";
-
     loadPosts();
-
   };
 
   document.getElementById("refreshBtn").onclick = loadPosts;
 
   mineOnlyEl.onchange = loadPosts;
 
-
   postsEl.onclick = async (e) => {
+    // 1) If clicking Edit/Delete, do button logic only (no modal)
+    const btn = e.target.closest?.("button");
+    if (btn) {
+      const id = btn.dataset.id;
+      if (!id) return;
 
-    const btn = e.target;
+      if (btn.classList.contains("deleteBtn")) {
+        await deletePost(id);
+        loadPosts();
+      }
 
-    const id = btn.dataset.id;
+      if (btn.classList.contains("editBtn")) {
+        // edit flow can be wired here later
+      }
 
-    if (!id) return;
-
-
-    if (btn.classList.contains("deleteBtn")) {
-
-      await deletePost(id);
-
-      loadPosts();
-
+      return;
     }
 
+    // 2) Otherwise click on card (including image/text) -> open post detail modal
+    const card = e.target.closest?.("article.post");
+    if (!card) return;
 
+    openModalFromCard(card);
   };
 
-
   loadPosts();
-
 }

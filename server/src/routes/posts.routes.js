@@ -16,7 +16,7 @@ function createPostsRouter(db) {
   // CREATE post
   router.post("/", async (req, res) => {
     try {
-      const { itemName, category, expectation, reality, sentiment, profileId } = req.body;
+      const { itemName, category, expectation, reality, sentiment, profileId, imageUrl } = req.body;
 
       if (!isNonEmptyString(itemName)) {
         return res.status(400).json({ error: "itemName is required (string)" });
@@ -41,12 +41,17 @@ function createPostsRouter(db) {
       const profile = await profiles.findOne({ _id: profileObjectId });
       if (!profile) return res.status(404).json({ error: "profile not found" });
 
+      if (imageUrl !== undefined && typeof imageUrl !== "string") {
+  return res.status(400).json({ error: "imageUrl must be a string" });
+}
+
       const doc = {
         itemName: itemName.trim(),
         category: category.trim(),
         expectation: expectation.trim(),
         reality: reality.trim(),
         sentiment,
+        imageUrl: imageUrl || null,
         profileId: profileObjectId,
         createdAt: new Date(),
         updatedAt: new Date(),
