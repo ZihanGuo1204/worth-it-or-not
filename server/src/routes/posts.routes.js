@@ -78,42 +78,55 @@ function createPostsRouter(db) {
   // READ posts (optional filter by category)
   // also joins nickname via a simple aggregation
   router.get("/", async (req, res) => {
-    try {
-      const { category } = req.query;
+  try {
+    const { category, profileId } = req.query;
 
-      const match = {};
-      if (category) match.category = String(category).trim();
+    const match = {};
 
-      const list = await posts
-        .aggregate([
-          { $match: match },
-          { $sort: { createdAt: -1 } },
-          {
-            $lookup: {
-              from: "profiles",
-              localField: "profileId",
-              foreignField: "_id",
-              as: "profile",
-            },
-          },
-          { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
-          {
-            $addFields: {
-              author: {
-                _id: "$profile._id",
-                nickname: "$profile.nickname",
-              },
-            },
-          },
-          { $project: { profile: 0 } },
-        ])
-        .toArray();
+    if (category) match.category = String(category).trim();
 
-      return res.json(list);
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
+    // ✅ add this: filter by profileId
+    if (profileId) {
+      if (!ObjectId.isValid(String(profileId))) {
+        return res.status(400).json({ error: "invalid profileId" });
+      }
+      match.profileId = new ObjectId(String(profileId));
     }
-  });
+
+    if (profileId) {
+      if (!ObjectId.isValid(profileId)) {
+        return res.status(400).json({ error: "invalid profileId" });
+      }
+      match.profileId = new ObjectId(profileId);
+    }
+
+    const list = await posts
+      .aggregate([
+        { $match: match },
+        { $sort: { createdAt: -1 } },
+        {
+          $lookup: {
+            from: "profiles",
+            localField: "profileId",
+            foreignField: "_id",
+            as: "profile",
+          },
+        },
+        { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            author: { _id: "$profile._id", nickname: "$profile.nickname" },
+          },
+        },
+        { $project: { profile: 0 } },
+      ])
+      .toArray();
+
+    return res.json(list);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
   // READ single post by id
   router.get("/:id", async (req, res) => {
