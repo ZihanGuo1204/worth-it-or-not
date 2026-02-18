@@ -2,7 +2,7 @@
 
 Author: Zihan Guo, Fanchao Yu  
 Course: CS5610 Web Development  
-Instructor: John Alexis Guerra Gomez  
+Instructor: John Alexis Guerra Gomez
 
 ---
 
@@ -17,14 +17,14 @@ This system allows students to:
 • Share their purchase experiences  
 • Compare expectation vs reality  
 • Upload images  
-• Learn from other students  
+• Learn from other students
 
 The system provides:
 
 • REST API backend  
 • MongoDB database  
 • Image upload system  
-• Modular frontend  
+• Modular frontend
 
 ---
 
@@ -44,14 +44,14 @@ Technologies:
 
 • HTML  
 • CSS Modules  
-• Vanilla JavaScript  
+• Vanilla JavaScript
 
 Responsibilities:
 
 • Render posts  
 • Submit posts  
 • Upload images  
-• Display profiles  
+• Display profiles
 
 ---
 
@@ -60,7 +60,7 @@ Responsibilities:
 Technologies:
 
 • Node.js  
-• Express.js  
+• Express.js
 
 Responsibilities:
 
@@ -94,7 +94,7 @@ profiles
 
 Fields:
 
-_id
+\_id
 
 nickname
 
@@ -106,7 +106,7 @@ posts
 
 Fields:
 
-_id
+\_id
 
 itemName
 

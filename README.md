@@ -2,10 +2,10 @@
 
 Author: Zihan Guo, Fanchao Yu  
 Class: CS5610 Web Development  
-Instructor: John Alexis Guerra Gomez  
+Instructor: John Alexis Guerra Gomez
 
 Live Demo: https://your-deployment-url-here  
-GitHub Repo: https://github.com/your-username/worth-it-or-not  
+GitHub Repo: https://github.com/your-username/worth-it-or-not
 
 ---
 
@@ -21,12 +21,12 @@ This application allows students to:
 • Compare expectation vs. reality  
 • Share their own experiences  
 • Upload images of purchased items  
-• Track their personal purchase history  
+• Track their personal purchase history
 
 The system supports both:
 
-1. Pre-purchase decision support  
-2. Post-purchase reflection and tracking  
+1. Pre-purchase decision support
+2. Post-purchase reflection and tracking
 
 ---
 
@@ -39,7 +39,7 @@ Needs help deciding whether a product is worth buying.
 Goals:
 
 • Avoid wasting money  
-• Learn from others' mistakes  
+• Learn from others' mistakes
 
 ---
 
@@ -50,7 +50,7 @@ Needs guidance on useful items for student life.
 Goals:
 
 • Discover useful products  
-• Avoid unnecessary purchases  
+• Avoid unnecessary purchases
 
 ---
 
@@ -66,7 +66,7 @@ Implementation:
 
 API
 
-GET /api/posts  
+GET /api/posts
 
 Page
 
@@ -85,7 +85,7 @@ Implementation:
 API
 
 POST /api/posts  
-POST /api/upload  
+POST /api/upload
 
 Page
 
@@ -103,7 +103,7 @@ Implementation:
 
 API
 
-GET /api/profiles  
+GET /api/profiles
 
 Page
 
@@ -121,7 +121,7 @@ Implementation:
 
 API
 
-GET /api/posts?category=Tech  
+GET /api/posts?category=Tech
 
 Page
 
@@ -135,7 +135,7 @@ Home
 
 HTML5  
 CSS3 (Modular CSS Architecture)  
-Vanilla JavaScript (ES6 Modules)  
+Vanilla JavaScript (ES6 Modules)
 
 No React used.
 
@@ -146,7 +146,7 @@ No React used.
 Node.js  
 Express.js  
 MongoDB  
-MongoDB Native Driver  
+MongoDB Native Driver
 
 No Mongoose used.
 
@@ -160,13 +160,13 @@ Frontend:
 
 • Static client served by Express  
 • Client-side rendering  
-• REST API consumption  
+• REST API consumption
 
 Backend:
 
 • Express REST API  
 • MongoDB database  
-• Image upload using Multer  
+• Image upload using Multer
 
 ---
 
@@ -178,7 +178,7 @@ Core Features:
 • Submit purchase reflections  
 • Upload images  
 • Filter posts  
-• View profile history  
+• View profile history
 
 Technical Features:
 
@@ -186,7 +186,7 @@ Technical Features:
 • Image upload system  
 • Modular CSS  
 • Client-side rendering  
-• MongoDB database  
+• MongoDB database
 
 ---
 
@@ -196,9 +196,9 @@ Technical Features:
 
 Fields:
 
-_id  
+\_id  
 nickname  
-createdAt  
+createdAt
 
 ---
 
@@ -206,7 +206,7 @@ createdAt
 
 Fields:
 
-_id  
+\_id  
 itemName  
 category  
 expectation  
@@ -215,11 +215,11 @@ sentiment
 profileId  
 imageUrl  
 createdAt  
-updatedAt  
+updatedAt
 
 Relationship:
 
-posts.profileId → profiles._id
+posts.profileId → profiles.\_id
 
 ---
 
@@ -265,7 +265,7 @@ Example:
 
 Home Page  
 Submit Page  
-Profile Page  
+Profile Page
 
 ---
 
@@ -326,20 +326,20 @@ client/
 &nbsp;&nbsp;&nbsp;&nbsp;api.js  
 &nbsp;&nbsp;&nbsp;&nbsp;utils.js  
 &nbsp;&nbsp;&nbsp;&nbsp;pages/  
-&nbsp;&nbsp;&nbsp;&nbsp;styles/  
+&nbsp;&nbsp;&nbsp;&nbsp;styles/
 
 server/  
 &nbsp;&nbsp;&nbsp;&nbsp;src/  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;app.js  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;db.js  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;routes/  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;routes/
 
 &nbsp;&nbsp;&nbsp;&nbsp;uploads/  
-&nbsp;&nbsp;&nbsp;&nbsp;seed.js  
+&nbsp;&nbsp;&nbsp;&nbsp;seed.js
 
 README.md  
 DESIGN.md  
-LICENSE  
+LICENSE
 
 ---
 
@@ -355,7 +355,7 @@ Not committed to GitHub.
 
 .env  
 node_modules  
-uploads  
+uploads
 
 ---
 
