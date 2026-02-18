@@ -224,62 +224,61 @@ export async function renderHome(container) {
 
       if (btn.classList.contains("deleteBtn")) {
         await deletePost(id);
-        loadPosts();
+        await loadPosts();
       }
 
       if (btn.classList.contains("editBtn")) {
-  const card = btn.closest("article.post");
-  if (!card) return;
+        try {
+          const card = btn.closest("article.post");
+          if (!card) return;
 
-  const currentItemName = card.dataset.itemname || "";
-  const currentCategory = card.dataset.category || "";
-  const currentSentiment = card.dataset.sentiment || "";
-  const currentExpectation = card.dataset.expectation || "";
-  const currentReality = card.dataset.reality || "";
+          const currentItemName = card.dataset.itemname || "";
+          const currentCategory = card.dataset.category || "";
+          const currentSentiment = card.dataset.sentiment || "";
+          const currentExpectation = card.dataset.expectation || "";
+          const currentReality = card.dataset.reality || "";
 
-  const itemName = prompt("Edit item name:", currentItemName);
-  if (itemName === null) return;
+          const itemName = prompt("Edit item name:", currentItemName);
+          if (itemName === null) return;
 
-  const category = prompt("Edit category:", currentCategory);
-  if (category === null) return;
+          const category = prompt("Edit category:", currentCategory);
+          if (category === null) return;
 
-  const sentiment = prompt(
-    "Edit sentiment (worth / not_worth / meh):",
-    currentSentiment
-  );
-  if (sentiment === null) return;
+          const sentiment = prompt(
+            "Edit sentiment (worth / not_worth / meh):",
+            currentSentiment
+          );
+          if (sentiment === null) return;
 
-  const expectation = prompt("Edit expectation:", currentExpectation);
-  if (expectation === null) return;
+          const expectation = prompt("Edit expectation:", currentExpectation);
+          if (expectation === null) return;
 
-  const reality = prompt("Edit reality:", currentReality);
-  if (reality === null) return;
+          const reality = prompt("Edit reality:", currentReality);
+          if (reality === null) return;
 
-  try {
-    await updatePost(id, {
-      itemName,
-      category,
-      sentiment,
-      expectation,
-      reality,
-    });
-    await loadPosts();
-  } catch (err) {
-    alert(err.message || "Edit failed");
-  }
+          await updatePost(id, {
+            itemName,
+            category,
+            sentiment,
+            expectation,
+            reality,
+          });
 
-  return;
-}
+          await loadPosts();
+        } catch (err) {
+          alert(err.message || "Edit failed");
+        }
+      }
 
       return;
     }
 
-    // 2) Otherwise click on card (including image/text) -> open post detail modal
+    // 2) Otherwise click on card -> open modal
     const card = e.target.closest?.("article.post");
     if (!card) return;
 
     openModalFromCard(card);
   };
 
-  loadPosts();
+  await loadPosts();
 }
