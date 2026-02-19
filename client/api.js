@@ -1,96 +1,79 @@
-// client/api.js
-// Small API helpers for the frontend (student-style, simple and readable)
+// client/app.js
+// Hash router + glass nav (dark-only, stable)
 
-export async function fetchPosts({ category, profileId, page, pageSize } = {}) {
-  const params = new URLSearchParams();
+import { renderHome } from "./pages/home.js";
+import { renderSubmit } from "./pages/submit.js";
+import { renderProfile } from "./pages/profile.js";
 
-  if (category) params.set("category", category);
-  if (profileId) params.set("profileId", profileId);
-  if (page) params.set("page", String(page));
-  if (pageSize) params.set("pageSize", String(pageSize));
-
-  const url = params.toString() ? `/api/posts?${params.toString()}` : "/api/posts";
-
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Failed to fetch posts");
-  }
-
-  return res.json(); // { items, page, pageSize, total, totalPages }
+// ✅ Force dark theme always
+function applyDarkTheme() {
+  document.documentElement.setAttribute("data-theme", "dark");
 }
 
-export async function createProfile(nickname) {
-  const res = await fetch("/api/profiles", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nickname }),
+function setActiveLink(route) {
+  const pills = document.querySelectorAll(".navPill[data-route]");
+  pills.forEach((a) => {
+    a.classList.toggle("active", a.getAttribute("data-route") === route);
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Failed to create profile");
-  }
-
-  return res.json();
 }
 
-export async function createPost(post) {
-  const res = await fetch("/api/posts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(post),
-  });
+function renderNav() {
+  const nav = document.createElement("nav");
+  nav.className = "topNav";
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Failed to create post");
-  }
+  nav.innerHTML = `
+    <div class="navInner">
+      <a class="brand" href="#/" aria-label="Go to Home">
+        <span class="brandTitle">Worth It or Not</span>
+      </a>
 
-  return res.json();
+      <div class="navCenter">
+        <a class="navPill" href="#/" data-route="home">Home</a>
+        <a class="navPill" href="#/submit" data-route="submit">Submit</a>
+        <a class="navPill" href="#/profile" data-route="profile">Profile</a>
+      </div>
+    </div>
+  `;
+
+  const oldNav = document.querySelector("nav");
+  if (oldNav) oldNav.replaceWith(nav);
+  else document.body.prepend(nav);
 }
 
-export async function deletePost(postId) {
-  const res = await fetch(`/api/posts/${encodeURIComponent(postId)}`, {
-    method: "DELETE",
-  });
+async function renderRoute() {
+  const app = document.getElementById("app") || document.querySelector("main");
+  if (!app) return;
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Failed to delete post");
+  const hash = window.location.hash || "#/";
+  const route = hash.replace("#/", "").trim();
+
+  if (route === "" || route === "/") {
+    setActiveLink("home");
+    await renderHome(app);
+    return;
   }
 
-  return res.json();
-}
-
-export async function updatePost(postId, patch) {
-  const res = await fetch(`/api/posts/${encodeURIComponent(postId)}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Failed to update post");
+  if (route === "submit") {
+    setActiveLink("submit");
+    renderSubmit(app);
+    return;
   }
 
-  return res.json();
-}
-
-export async function uploadImage(file) {
-  const fd = new FormData();
-  fd.append("image", file);
-
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    body: fd,
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Upload failed");
+  if (route === "profile") {
+    setActiveLink("profile");
+    renderProfile(app);
+    return;
   }
 
-  return res.json(); // { imageUrl: "/uploads/xxx.jpg" }
+  setActiveLink("");
+  app.innerHTML = `<h2>Not found</h2><p>Try going back to <a href="#/">Home</a>.</p>`;
 }
+
+function start() {
+  applyDarkTheme();
+  renderNav();
+  renderRoute();
+  window.addEventListener("hashchange", () => renderRoute());
+}
+
+start();
