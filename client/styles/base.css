@@ -417,3 +417,17 @@ button:disabled {
     border-bottom: 1px solid var(--border);
   }
 }
+
+/* When image fails / missing, keep left panel pretty */
+.postModalImgWrap {
+  background: var(--card2); /* lighter than var(--card) */
+}
+
+.postModalImg {
+  background: var(--card2);
+}
+
+/* If image doesn't load, don't show broken icon/alt overlay */
+.postModalImg[style*="display: none"] {
+  display: none !important;
+}

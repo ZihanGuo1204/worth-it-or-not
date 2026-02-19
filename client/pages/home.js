@@ -296,13 +296,23 @@ export async function renderHome(container) {
     modal.querySelector('[data-role="reality"]').textContent = reality;
 
     const img = modal.querySelector(".postModalImg");
-    if (imageUrl) {
-      img.src = imageUrl;
-      img.style.display = "block";
-    } else {
-      img.removeAttribute("src");
-      img.style.display = "none";
-    }
+
+// reset handlers each time
+img.onerror = null;
+
+if (imageUrl) {
+  img.src = imageUrl;
+  img.style.display = "block";
+
+  // ✅ if image 404, hide it so modal doesn't look broken/dark
+  img.onerror = () => {
+    img.removeAttribute("src");
+    img.style.display = "none";
+  };
+} else {
+  img.removeAttribute("src");
+  img.style.display = "none";
+}
 
     modal.classList.add("open");
   }
