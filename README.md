@@ -12,7 +12,7 @@ uploaded images may be deleted after redeploy or restart.
 
 The system automatically detects missing images and displays a fallback image instead.
 
-GitHub Repo: https://github.com/your-username/worth-it-or-not
+GitHub Repo: https://github.com/ZihanGuo1204/worth-it-or-not
 
 ---
 
