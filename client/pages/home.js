@@ -1,10 +1,10 @@
 // client/pages/home.js
-import { fetchPosts, deletePost, updatePost } from "../api.js";
+import { fetchPosts, deletePost, updatePost, uploadImage } from "../api.js";
 import { escapeHtml } from "../utils.js";
 
 const LS_PROFILE_ID = "won_profile_id";
 
-// Default fallback image (put file at: client/assets/image-missing.png)
+// Default fallback image
 const DEFAULT_IMAGE_URL = "/assets/image-missing.png";
 const DEFAULT_IMAGE_MSG =
   "Image unavailable (Render free tier may delete uploads). Showing a default image.";
@@ -20,7 +20,6 @@ export async function renderHome(container) {
 
   container.innerHTML = `
     <div class="home">
-
       <div class="homeHeader">
         <h1 class="sectionTitle">Home</h1>
         <p class="hint">Tip: Edit/Delete buttons only show for your own posts.</p>
@@ -34,7 +33,6 @@ export async function renderHome(container) {
 
         <div class="filterRow">
           <label>Filter by category:</label>
-
           <input id="categoryInput" list="categoryList" placeholder="e.g. Tech" />
 
           <datalist id="categoryList">
@@ -196,7 +194,7 @@ export async function renderHome(container) {
     updatePagerUI();
   }
 
-  // ===== Post detail modal (create once) =====
+  // ===== Post detail modal =====
   let modal = document.getElementById("postModal");
   if (!modal) {
     modal = document.createElement("div");
@@ -313,6 +311,22 @@ export async function renderHome(container) {
         </div>
 
         <form class="editModalForm" id="editModalForm">
+
+          <!-- Image edit block -->
+          <div class="field">
+            <label>Photo</label>
+            <div class="editImageRow">
+              <img id="editImagePreview" class="editImagePreview" alt="image preview" />
+              <div class="editImageActions">
+                <input id="editImageFile" type="file" accept="image/*" />
+                <div class="btnRow" style="margin-top:10px;">
+                  <button type="button" id="editRemoveImgBtn">Remove image</button>
+                </div>
+                <div class="editUploadHint" id="editUploadHint" style="display:none;"></div>
+              </div>
+            </div>
+          </div>
+
           <div class="field">
             <label for="editItemName">Item name</label>
             <input id="editItemName" name="itemName" required />
@@ -356,12 +370,28 @@ export async function renderHome(container) {
 
   const editForm = editModal.querySelector("#editModalForm");
   const editMsg = editModal.querySelector("#editModalMsg");
+  const editSaveBtn = editModal.querySelector("#editSaveBtn");
+
+  const editImagePreview = editModal.querySelector("#editImagePreview");
+  const editImageFile = editModal.querySelector("#editImageFile");
+  const editRemoveImgBtn = editModal.querySelector("#editRemoveImgBtn");
+  const editUploadHint = editModal.querySelector("#editUploadHint");
 
   let editingId = null;
+  let editingOriginalImageUrl = null;
+  let editingNewFile = null;
+  let removeImageRequested = false;
 
   function closeEditModal() {
     editModal.classList.remove("open");
     editingId = null;
+    editingOriginalImageUrl = null;
+    editingNewFile = null;
+    removeImageRequested = false;
+    editImageFile.value = "";
+    editUploadHint.style.display = "none";
+    editUploadHint.textContent = "";
+    editSaveBtn.disabled = false;
   }
 
   // close behaviors
@@ -372,9 +402,48 @@ export async function renderHome(container) {
   editModal.querySelector("#editCancelBtn").addEventListener("click", closeEditModal);
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closeEditModal();
+    if (e.key === "Escape") closeEditModal();
+  });
+
+  function setEditPreview(url) {
+    editImagePreview.src = url || DEFAULT_IMAGE_URL;
+    editImagePreview.onerror = () => {
+      editImagePreview.onerror = null;
+      editImagePreview.src = DEFAULT_IMAGE_URL;
+    };
+  }
+
+  editImageFile.addEventListener("change", () => {
+    const file = editImageFile.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      editUploadHint.textContent = "❌ Please choose an image file.";
+      editUploadHint.style.display = "block";
+      editImageFile.value = "";
+      editingNewFile = null;
+      return;
     }
+
+    removeImageRequested = false;
+    editingNewFile = file;
+
+    // local preview
+    const blobUrl = URL.createObjectURL(file);
+    setEditPreview(blobUrl);
+
+    editUploadHint.textContent = "✅ New image selected (will upload when you click Save).";
+    editUploadHint.style.display = "block";
+  });
+
+  editRemoveImgBtn.addEventListener("click", () => {
+    removeImageRequested = true;
+    editingNewFile = null;
+    editImageFile.value = "";
+    setEditPreview(DEFAULT_IMAGE_URL);
+
+    editUploadHint.textContent = "🗑️ Image will be removed when you click Save.";
+    editUploadHint.style.display = "block";
   });
 
   function openEditModalFromCard(card, id) {
@@ -384,7 +453,19 @@ export async function renderHome(container) {
     editMsg.style.display = "none";
     editMsg.textContent = "";
 
-    // fill form from dataset (dataset already escaped)
+    // reset image state
+    editingOriginalImageUrl = (card.dataset.imageurl || "").trim() || null;
+    editingNewFile = null;
+    removeImageRequested = false;
+    editImageFile.value = "";
+    editSaveBtn.disabled = false;
+
+    // preview current (or fallback)
+    setEditPreview(editingOriginalImageUrl || DEFAULT_IMAGE_URL);
+    editUploadHint.style.display = "none";
+    editUploadHint.textContent = "";
+
+    // fill form from dataset
     editForm.editItemName.value = card.dataset.itemname || "";
     editForm.editCategory.value = card.dataset.category || "";
     editForm.editSentiment.value = card.dataset.sentiment || "meh";
@@ -411,20 +492,33 @@ export async function renderHome(container) {
       return;
     }
 
+    // disable while saving
+    editSaveBtn.disabled = true;
+    editMsg.style.display = "none";
+    editMsg.textContent = "";
+
     try {
-      await updatePost(editingId, {
-        itemName,
-        category,
-        sentiment,
-        expectation,
-        reality,
-      });
+      const patch = { itemName, category, sentiment, expectation, reality };
+
+      // image update logic
+      if (removeImageRequested) {
+        patch.imageUrl = null;
+      } else if (editingNewFile) {
+        editUploadHint.textContent = "Uploading image...";
+        editUploadHint.style.display = "block";
+        const up = await uploadImage(editingNewFile);
+        patch.imageUrl = up?.imageUrl || null;
+      }
+      // else: do not include imageUrl => keep existing
+
+      await updatePost(editingId, patch);
 
       closeEditModal();
       await loadPosts();
     } catch (err) {
       editMsg.textContent = err?.message || "Edit failed";
       editMsg.style.display = "block";
+      editSaveBtn.disabled = false;
     }
   };
 

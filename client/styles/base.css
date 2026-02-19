@@ -1,7 +1,6 @@
 /* =========================
    base.css
    Theme tokens + global base + shared components
-   (Dark-only default + modal styles + image fallback msg)
    ========================= */
 
 /* ---- Theme tokens ---- */
@@ -29,7 +28,7 @@
     BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* ✅ Default to dark even if data-theme is missing */
+/* Default to dark even if data-theme is missing */
 html {
   color-scheme: dark;
 
@@ -313,7 +312,7 @@ button:disabled {
 
 /* Image side */
 .postModalImgWrap {
-  position: relative; /* ✅ IMPORTANT: anchor for overlay msg */
+  position: relative;
   background: var(--card);
   display: flex;
   align-items: center;
@@ -504,4 +503,39 @@ button:disabled {
   .postModalCard {
     transition: none !important;
   }
+}
+
+/* ===== Edit modal image UI ===== */
+.editImageRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 520px) {
+  .editImageRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.editImagePreview {
+  width: 160px;
+  height: 160px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  background: var(--card);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+}
+
+.editImageActions input[type="file"] {
+  width: 100%;
+  border-radius: 16px;
+}
+
+.editUploadHint {
+  margin-top: 10px;
+  font-weight: 800;
+  color: var(--muted);
 }
