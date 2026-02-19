@@ -446,3 +446,24 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.postModalImgWrap {
+  position: relative;
+}
+
+.postModalImgMsg {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  max-width: 260px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  line-height: 1.25;
+  backdrop-filter: blur(8px);
+}
+html[data-theme="light"] .postModalImgMsg {
+  background: rgba(15, 23, 42, 0.35);
+}

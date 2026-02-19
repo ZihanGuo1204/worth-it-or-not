@@ -4,6 +4,11 @@ import { escapeHtml } from "../utils.js";
 
 const LS_PROFILE_ID = "won_profile_id";
 
+// ✅ Default fallback image (put file at: client/assets/cat2.png)
+const DEFAULT_IMAGE_URL = "/assets/cat2.png";
+const DEFAULT_IMAGE_MSG =
+  "Image unavailable (Render free tier may delete uploads). Showing a default image.";
+
 export async function renderHome(container) {
   const profileId = localStorage.getItem(LS_PROFILE_ID);
 
@@ -32,38 +37,26 @@ export async function renderHome(container) {
 
         <div class="filterRow">
           <label>Filter by category:</label>
+
           <input
-          id="categoryInput"
-          list="categoryList"
-          placeholder="e.g. Tech"
+            id="categoryInput"
+            list="categoryList"
+            placeholder="e.g. Tech"
           />
-          
+
           <datalist id="categoryList">
-          
-          <option value="Tech"></option>
-          
-          <option value="School"></option>
-          
-          <option value="Kitchen"></option>
-          
-          <option value="Food"></option>
-          
-          <option value="Fashion"></option>
-          
-          <option value="Fitness"></option>
-          
-          <option value="Beauty"></option>
-          
-          <option value="Home"></option>
-          
-          <option value="Travel"></option>
-          
-          <option value="Transportation"></option>
-          
-          <option value="Subscriptions"></option>
-          
-          <option value="Entertainment"></option>
-          
+            <option value="Tech"></option>
+            <option value="School"></option>
+            <option value="Kitchen"></option>
+            <option value="Food"></option>
+            <option value="Fashion"></option>
+            <option value="Fitness"></option>
+            <option value="Beauty"></option>
+            <option value="Home"></option>
+            <option value="Travel"></option>
+            <option value="Transportation"></option>
+            <option value="Subscriptions"></option>
+            <option value="Entertainment"></option>
           </datalist>
 
           <div class="btnRow">
@@ -190,7 +183,8 @@ export async function renderHome(container) {
 
             ${
               p.imageUrl
-                ? `<img class="postImage" src="${p.imageUrl}" alt="${safeTitle}" loading="lazy" />`
+                ? `<img class="postImage" src="${p.imageUrl}" alt="${safeTitle}" loading="lazy"
+                     onerror="this.style.display='none';" />`
                 : ""
             }
 
@@ -234,9 +228,12 @@ export async function renderHome(container) {
     modal.innerHTML = `
       <div class="postModalCard" role="dialog" aria-modal="true" aria-label="Post detail">
         <button class="postModalClose" type="button" aria-label="Close">✕</button>
+
         <div class="postModalImgWrap">
           <img class="postModalImg" alt="post image" style="display:none;" />
+          <div class="postModalImgMsg" style="display:none;"></div>
         </div>
+
         <div class="postModalBody">
           <div class="postModalTitleRow">
             <div>
@@ -296,30 +293,41 @@ export async function renderHome(container) {
     modal.querySelector('[data-role="reality"]').textContent = reality;
 
     const img = modal.querySelector(".postModalImg");
+    const msgEl = modal.querySelector(".postModalImgMsg");
 
-// reset handlers each time
-img.onerror = null;
+    // reset state every open
+    img.onerror = null;
+    msgEl.style.display = "none";
+    msgEl.textContent = "";
 
-if (imageUrl) {
-  img.src = imageUrl;
-  img.style.display = "block";
+    // If no imageUrl, show default immediately + message
+    if (!imageUrl) {
+      img.src = DEFAULT_IMAGE_URL;
+      img.style.display = "block";
+      msgEl.textContent = DEFAULT_IMAGE_MSG;
+      msgEl.style.display = "block";
+      modal.classList.add("open");
+      return;
+    }
 
-  // ✅ if image 404, hide it so modal doesn't look broken/dark
-  img.onerror = () => {
-    img.removeAttribute("src");
-    img.style.display = "none";
-  };
-} else {
-  img.removeAttribute("src");
-  img.style.display = "none";
-}
+    // Try real image first
+    img.src = imageUrl;
+    img.style.display = "block";
+
+    // If image 404 / fails, fall back to default + message
+    img.onerror = () => {
+      img.onerror = null; // prevent loop
+      img.src = DEFAULT_IMAGE_URL;
+      img.style.display = "block";
+      msgEl.textContent = DEFAULT_IMAGE_MSG;
+      msgEl.style.display = "block";
+    };
 
     modal.classList.add("open");
   }
 
   // ===== Controls =====
   document.getElementById("filterBtn").onclick = () => {
-    // filter change => reset page
     currentPage = 1;
     loadPosts();
   };
@@ -374,7 +382,6 @@ if (imageUrl) {
       }
 
       if (btn.classList.contains("editBtn")) {
-        // Simple prompt-based edit
         try {
           const card = btn.closest?.("article.post");
           if (!card) return;
@@ -415,7 +422,6 @@ if (imageUrl) {
         } catch (err) {
           alert(err.message || "Edit failed");
         }
-
         return;
       }
 
