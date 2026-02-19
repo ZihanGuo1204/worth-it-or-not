@@ -6,35 +6,31 @@ Instructor: John Alexis Guerra Gomez
 
 ---
 
-# Overview
+# Project Description
 
 Worth It or Not is a student-focused purchase reflection web application.
 
-Students often buy products based on expectations, hype, or trends.
+Students often buy products based on expectations, hype, or trends, but later discover the product was not as useful as expected.
 
 This system allows students to:
 
 • Share their purchase experiences  
 • Compare expectation vs reality  
 • Upload images  
-• Learn from other students
+• Learn from other students  
+• Track their purchase history  
 
-The system provides:
-
-• REST API backend  
-• MongoDB database  
-• Image upload system  
-• Modular frontend
+The goal of the system is to help students make smarter purchasing decisions.
 
 ---
 
-# Architecture
+# System Architecture
 
 The system follows a:
 
 Client → Server → Database
 
-structure.
+architecture.
 
 ---
 
@@ -42,16 +38,20 @@ structure.
 
 Technologies:
 
-• HTML  
-• CSS Modules  
-• Vanilla JavaScript
+• HTML5  
+• CSS3 Modules  
+• Vanilla JavaScript (ES6 Modules)
 
 Responsibilities:
 
 • Render posts  
 • Submit posts  
 • Upload images  
-• Display profiles
+• Display profiles  
+• Filter posts  
+• Pagination  
+
+Client is served as static files by Express.
 
 ---
 
@@ -60,11 +60,14 @@ Responsibilities:
 Technologies:
 
 • Node.js  
-• Express.js
+• Express.js  
 
 Responsibilities:
 
-• REST API
+• Provide REST API  
+• Handle CRUD operations  
+• Handle image upload  
+• Serve static frontend  
 
 Routes:
 
@@ -72,7 +75,13 @@ GET /api/posts
 
 POST /api/posts
 
+PUT /api/posts/:id
+
+DELETE /api/posts/:id
+
 GET /api/profiles
+
+POST /api/profiles
 
 POST /api/upload
 
@@ -84,17 +93,17 @@ GET /api/health
 
 Technology:
 
-MongoDB
+MongoDB (Native Driver, not Mongoose)
 
 Collections:
 
 ---
 
-profiles
+## profiles
 
 Fields:
 
-\_id
+_id
 
 nickname
 
@@ -102,11 +111,11 @@ createdAt
 
 ---
 
-posts
+## posts
 
 Fields:
 
-\_id
+_id
 
 itemName
 
@@ -128,9 +137,15 @@ updatedAt
 
 ---
 
+Relationship:
+
+posts.profileId → profiles._id
+
+---
+
 # Image Storage
 
-Images are stored in:
+Images are stored locally in:
 
 server/uploads/
 
@@ -148,6 +163,18 @@ index.html
 
 app.js
 
+api.js
+
+utils.js
+
+pages/
+
+home.js
+
+submit.js
+
+profile.js
+
 styles/
 
 base.css
@@ -160,9 +187,9 @@ cards.css
 
 forms.css
 
-pages.css
-
 modals.css
+
+home.css
 
 ---
 
@@ -194,7 +221,7 @@ seed.js
 
 GET /api/posts
 
-Returns list of posts
+Returns paginated posts
 
 ---
 
@@ -204,9 +231,27 @@ Creates new post
 
 ---
 
+PUT /api/posts/:id
+
+Updates post
+
+---
+
+DELETE /api/posts/:id
+
+Deletes post
+
+---
+
 GET /api/profiles
 
 Returns profiles
+
+---
+
+POST /api/profiles
+
+Creates profile
 
 ---
 
@@ -218,7 +263,7 @@ Uploads image
 
 GET /api/health
 
-Server status check
+Server health check
 
 ---
 
@@ -230,12 +275,177 @@ server/seed.js
 
 Creates:
 
-• profiles
-• posts
+• profiles  
+• posts  
 
 Supports:
 
 SEED_POSTS=1200
+
+This satisfies project requirement of database containing more than 1000 records.
+
+---
+
+# User Personas
+
+---
+
+## Persona 1 — Budget-Conscious Student
+
+Name: Alex  
+Age: 21  
+Major: Computer Science  
+
+Problem:
+
+Alex has limited money and wants to avoid wasting money.
+
+Goals:
+
+• Learn from other students  
+• Avoid regret purchases  
+
+---
+
+## Persona 2 — New Student
+
+Name: Emily  
+Age: 18  
+Major: Biology  
+
+Problem:
+
+Emily doesn't know which products are useful.
+
+Goals:
+
+• Discover useful products  
+• Learn from others  
+
+---
+
+# User Stories
+
+---
+
+## User Story 1 — Browse Posts
+
+As a student,
+
+I want to browse purchase reflections,
+
+So that I can learn from others.
+
+Implementation:
+
+GET /api/posts
+
+Page:
+
+Home
+
+---
+
+## User Story 2 — Submit Post
+
+As a student,
+
+I want to submit a purchase experience,
+
+So that I can share whether an item was worth it.
+
+Implementation:
+
+POST /api/posts
+
+POST /api/upload
+
+Page:
+
+Submit
+
+---
+
+## User Story 3 — View Profile
+
+As a student,
+
+I want to view my posts,
+
+So that I can track my purchase history.
+
+Implementation:
+
+GET /api/profiles
+
+Page:
+
+Profile
+
+---
+
+## User Story 4 — Filter Posts
+
+As a student,
+
+I want to filter posts by category,
+
+So that I can find relevant items.
+
+Implementation:
+
+GET /api/posts?category=Tech
+
+Page:
+
+Home
+
+---
+
+# Design Mockups
+
+---
+
+## Home Page
+
+Features:
+
+• View posts  
+• Filter posts  
+• Pagination  
+• Edit/Delete posts  
+• Image display  
+
+Screenshot:
+
+(Add screenshot here)
+
+---
+
+## Submit Page
+
+Features:
+
+• Submit form  
+• Upload image  
+• Preview image  
+
+Screenshot:
+
+(Add screenshot here)
+
+---
+
+## Profile Page
+
+Features:
+
+• View user posts  
+• Profile creation  
+
+Screenshot:
+
+(Add screenshot here)
 
 ---
 
@@ -245,38 +455,65 @@ Vanilla JS instead of React
 
 Reason:
 
-Class requirement
+Course requirement to use vanilla JavaScript
+
+---
 
 MongoDB Native Driver instead of Mongoose
 
 Reason:
 
-Class requirement
+Course requirement prohibits Mongoose
 
-Disk storage instead of GridFS
+---
+
+Disk storage instead of cloud storage
 
 Reason:
 
-Simpler and faster
+Simpler implementation  
+Sufficient for project scope  
+
+---
+
+Pagination system implemented
+
+Reason:
+
+Improve performance and usability with large dataset
 
 ---
 
 # Security
 
-.env file stores database URI
+Sensitive data stored in:
 
-Not committed to Git
+.env
+
+.env is not committed to GitHub
+
+.gitignore protects:
+
+.env
+
+node_modules
+
+uploads
 
 ---
 
 # Conclusion
 
-The system provides a complete full-stack web application.
+Worth It or Not is a complete full-stack web application.
 
-Supports:
+It provides:
 
-• CRUD operations
-• Image upload
-• Profile system
-• REST API
-• Database storage
+• REST API  
+• MongoDB database  
+• Profile system  
+• Image upload  
+• Pagination  
+• Filtering  
+• CRUD functionality  
+
+The system meets all project requirements.
