@@ -4,7 +4,7 @@ import { escapeHtml } from "../utils.js";
 
 const LS_PROFILE_ID = "won_profile_id";
 
-// Default fallback image
+// Default fallback image (put file at: client/assets/image-missing.png)
 const DEFAULT_IMAGE_URL = "/assets/image-missing.png";
 const DEFAULT_IMAGE_MSG =
   "Image unavailable (Render free tier may delete uploads). Showing a default image.";
@@ -58,7 +58,6 @@ export async function renderHome(container) {
         </div>
       </div>
 
-      <!-- Pagination UI -->
       <div class="pager" style="display:flex; gap:10px; align-items:center; margin:14px 0;">
         <button id="prevPageBtn" type="button">Prev</button>
         <div id="pageInfo" style="opacity:0.9;">Page 1 / 1</div>
@@ -146,14 +145,12 @@ export async function renderHome(container) {
     postsEl.innerHTML = items
       .map((p) => {
         const canEdit = String(profileId || "") === String(p.profileId || "");
-        const preview = p.expectation || "";
 
+        const preview = p.expectation || "";
         const safeTitle = escapeHtml(p.itemName || "");
         const safeCategory = escapeHtml(p.category || "");
         const safeSentiment = escapeHtml(p.sentiment || "");
         const safeBy = escapeHtml(p.author?.nickname || "unknown");
-
-        const safeImageUrl = escapeHtml(p.imageUrl || "");
 
         return `
           <article class="post"
@@ -164,7 +161,7 @@ export async function renderHome(container) {
             data-by="${safeBy}"
             data-expectation="${escapeHtml(p.expectation || "")}"
             data-reality="${escapeHtml(p.reality || "")}"
-            data-imageurl="${safeImageUrl}"
+            data-imageurl="${escapeHtml(p.imageUrl || "")}"
           >
             ${
               p.imageUrl
@@ -246,13 +243,11 @@ export async function renderHome(container) {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closePostModal();
   });
+
   modal.querySelector(".postModalClose").addEventListener("click", closePostModal);
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      closePostModal();
-      closeEditModal();
-    }
+    if (e.key === "Escape") closePostModal();
   });
 
   function openModalFromCard(card) {
@@ -301,7 +296,7 @@ export async function renderHome(container) {
     modal.classList.add("open");
   }
 
-  // ===== Edit Modal =====
+  // ===== iOS-style Edit Modal =====
   let editModal = document.getElementById("editModal");
   if (!editModal) {
     editModal = document.createElement("div");
@@ -315,7 +310,6 @@ export async function renderHome(container) {
         </div>
 
         <form class="editModalForm" id="editModalForm">
-
           <div class="field">
             <label>Photo</label>
             <div class="editImageRow">
@@ -381,8 +375,7 @@ export async function renderHome(container) {
   const editUploadHint = editModal.querySelector("#editUploadHint");
 
   let editingId = null;
-  let originalImageUrl = "";
-  let newImageFile = null;
+  let editingNewFile = null;
   let removeImageRequested = false;
 
   function setEditPreview(url) {
@@ -396,23 +389,23 @@ export async function renderHome(container) {
   function closeEditModal() {
     editModal.classList.remove("open");
     editingId = null;
-    originalImageUrl = "";
-    newImageFile = null;
+    editingNewFile = null;
     removeImageRequested = false;
     editImageFile.value = "";
     editUploadHint.style.display = "none";
     editUploadHint.textContent = "";
-    editMsg.style.display = "none";
-    editMsg.textContent = "";
     editSaveBtn.disabled = false;
   }
 
-  // close behaviors
   editModal.addEventListener("click", (e) => {
     if (e.target === editModal) closeEditModal();
   });
   editModal.querySelector(".editModalClose").addEventListener("click", closeEditModal);
   editModal.querySelector("#editCancelBtn").addEventListener("click", closeEditModal);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeEditModal();
+  });
 
   editImageFile.addEventListener("change", () => {
     const file = editImageFile.files?.[0];
@@ -422,12 +415,12 @@ export async function renderHome(container) {
       editUploadHint.textContent = "❌ Please choose an image file.";
       editUploadHint.style.display = "block";
       editImageFile.value = "";
-      newImageFile = null;
+      editingNewFile = null;
       return;
     }
 
     removeImageRequested = false;
-    newImageFile = file;
+    editingNewFile = file;
 
     const blobUrl = URL.createObjectURL(file);
     setEditPreview(blobUrl);
@@ -438,7 +431,7 @@ export async function renderHome(container) {
 
   editRemoveImgBtn.addEventListener("click", () => {
     removeImageRequested = true;
-    newImageFile = null;
+    editingNewFile = null;
     editImageFile.value = "";
     setEditPreview(DEFAULT_IMAGE_URL);
 
@@ -451,14 +444,15 @@ export async function renderHome(container) {
 
     editMsg.style.display = "none";
     editMsg.textContent = "";
-    editSaveBtn.disabled = false;
 
-    originalImageUrl = (card.dataset.imageurl || "").trim();
-    newImageFile = null;
+    editingNewFile = null;
     removeImageRequested = false;
     editImageFile.value = "";
+    editSaveBtn.disabled = false;
 
-    setEditPreview(originalImageUrl || DEFAULT_IMAGE_URL);
+    const currentUrl = (card.dataset.imageurl || "").trim();
+    setEditPreview(currentUrl || DEFAULT_IMAGE_URL);
+
     editUploadHint.style.display = "none";
     editUploadHint.textContent = "";
 
@@ -495,16 +489,16 @@ export async function renderHome(container) {
     try {
       const patch = { itemName, category, sentiment, expectation, reality };
 
-      // ✅ image update logic
+      // ✅ image logic (THIS is the important part)
       if (removeImageRequested) {
         patch.imageUrl = null;
-      } else if (newImageFile) {
+      } else if (editingNewFile) {
         editUploadHint.textContent = "Uploading image...";
         editUploadHint.style.display = "block";
-        const up = await uploadImage(newImageFile);
+        const up = await uploadImage(editingNewFile);
         patch.imageUrl = up?.imageUrl || null;
       }
-      // else: don't touch imageUrl => keep existing
+      // else: do not include imageUrl => keep existing
 
       await updatePost(editingId, patch);
 
@@ -529,9 +523,7 @@ export async function renderHome(container) {
     loadPosts();
   };
 
-  document.getElementById("refreshBtn").onclick = () => {
-    loadPosts();
-  };
+  document.getElementById("refreshBtn").onclick = () => loadPosts();
 
   mineOnlyEl.onchange = () => {
     currentPage = 1;
@@ -558,7 +550,7 @@ export async function renderHome(container) {
     loadPosts();
   };
 
-  // ===== Post click handling (delete/edit/modal) =====
+  // ===== Post click handling =====
   postsEl.onclick = async (e) => {
     const btn = e.target.closest?.("button");
     if (btn) {
