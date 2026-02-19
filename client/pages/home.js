@@ -16,20 +16,16 @@ export async function renderHome(container) {
   let currentPage = 1;
   let pageSize = 12;
   let totalPages = 1;
-  let lastQueryKey = ""; // used to auto-reset page when filters change
+  let lastQueryKey = "";
 
   container.innerHTML = `
     <div class="home">
-
       <div class="homeHeader">
         <h1 class="sectionTitle">Home</h1>
-        <p class="hint">
-          Tip: Edit/Delete buttons only show for your own posts.
-        </p>
+        <p class="hint">Tip: Edit/Delete buttons only show for your own posts.</p>
       </div>
 
       <div class="controls">
-
         <label class="checkboxRow">
           <input id="mineOnly" type="checkbox">
           <span>My posts only</span>
@@ -38,11 +34,7 @@ export async function renderHome(container) {
         <div class="filterRow">
           <label>Filter by category:</label>
 
-          <input
-            id="categoryInput"
-            list="categoryList"
-            placeholder="e.g. Tech"
-          />
+          <input id="categoryInput" list="categoryList" placeholder="e.g. Tech" />
 
           <datalist id="categoryList">
             <option value="Tech"></option>
@@ -65,10 +57,8 @@ export async function renderHome(container) {
             <button id="refreshBtn">Refresh</button>
           </div>
         </div>
-
       </div>
 
-      <!-- Pagination UI -->
       <div class="pager" style="display:flex; gap:10px; align-items:center; margin:14px 0;">
         <button id="prevPageBtn" type="button">Prev</button>
         <div id="pageInfo" style="opacity:0.9;">Page 1 / 1</div>
@@ -84,10 +74,7 @@ export async function renderHome(container) {
         </div>
       </div>
 
-      <div id="posts" class="posts">
-        Loading...
-      </div>
-
+      <div id="posts" class="posts">Loading...</div>
     </div>
   `;
 
@@ -118,7 +105,6 @@ export async function renderHome(container) {
   }
 
   async function loadPosts() {
-    // If filter changed, reset to page 1
     const key = currentQueryKey();
     if (key !== lastQueryKey) {
       currentPage = 1;
@@ -128,7 +114,6 @@ export async function renderHome(container) {
     const category = categoryInputEl.value.trim();
     const mineOnly = mineOnlyEl.checked;
 
-    // If "My posts only" but no profileId exists, show friendly message
     if (mineOnly && !profileId) {
       postsEl.innerHTML = `
         <p class="empty">
@@ -148,7 +133,6 @@ export async function renderHome(container) {
       pageSize,
     });
 
-    // server returns { items, page, pageSize, total, totalPages }
     const items = Array.isArray(data) ? data : data.items || [];
     currentPage = Array.isArray(data) ? currentPage : data.page || currentPage;
     totalPages = Array.isArray(data) ? 1 : data.totalPages || 1;
@@ -180,11 +164,10 @@ export async function renderHome(container) {
             data-reality="${escapeHtml(p.reality || "")}"
             data-imageurl="${escapeHtml(p.imageUrl || "")}"
           >
-
             ${
               p.imageUrl
                 ? `<img class="postImage" src="${p.imageUrl}" alt="${safeTitle}" loading="lazy"
-                     onerror="this.style.display='none';" />`
+                    onerror="this.style.display='none';" />`
                 : ""
             }
 
@@ -199,16 +182,8 @@ export async function renderHome(container) {
               <p class="postPreview">${escapeHtml(preview)}</p>
 
               <div class="actions" style="margin-top:auto; display:flex; gap:10px; justify-content:flex-end;">
-                ${
-                  canEdit
-                    ? `<button class="editBtn" data-id="${p._id}">Edit</button>`
-                    : ""
-                }
-                ${
-                  canEdit
-                    ? `<button class="deleteBtn" data-id="${p._id}">Delete</button>`
-                    : ""
-                }
+                ${canEdit ? `<button class="editBtn" data-id="${p._id}">Edit</button>` : ""}
+                ${canEdit ? `<button class="deleteBtn" data-id="${p._id}">Delete</button>` : ""}
               </div>
             </div>
           </article>
@@ -230,7 +205,6 @@ export async function renderHome(container) {
         <button class="postModalClose" type="button" aria-label="Close">✕</button>
 
         <div class="postModalImgWrap">
-          <!-- ✅ MUST match base.css class: .imageFallbackMsg -->
           <div class="imageFallbackMsg" style="display:none;"></div>
           <img class="postModalImg" alt="post image" style="display:none;" />
         </div>
@@ -296,12 +270,12 @@ export async function renderHome(container) {
     const img = modal.querySelector(".postModalImg");
     const msgEl = modal.querySelector(".imageFallbackMsg");
 
-    // reset state every open
+    // reset
     img.onerror = null;
     msgEl.style.display = "none";
     msgEl.textContent = "";
 
-    // If no imageUrl, show default immediately + message
+    // No image -> default + msg
     if (!imageUrl) {
       img.src = DEFAULT_IMAGE_URL;
       img.style.display = "block";
@@ -311,11 +285,10 @@ export async function renderHome(container) {
       return;
     }
 
-    // Try real image first
+    // Try real image
     img.src = imageUrl;
     img.style.display = "block";
 
-    // If image 404 / fails, fall back to default + message
     img.onerror = () => {
       img.onerror = null; // prevent loop
       img.src = DEFAULT_IMAGE_URL;
@@ -348,7 +321,6 @@ export async function renderHome(container) {
     loadPosts();
   };
 
-  // pager buttons
   prevBtn.onclick = () => {
     if (currentPage > 1) {
       currentPage -= 1;
@@ -411,14 +383,7 @@ export async function renderHome(container) {
           const reality = prompt("Edit reality:", currentReality);
           if (reality === null) return;
 
-          await updatePost(id, {
-            itemName,
-            category,
-            sentiment,
-            expectation,
-            reality,
-          });
-
+          await updatePost(id, { itemName, category, sentiment, expectation, reality });
           await loadPosts();
         } catch (err) {
           alert(err.message || "Edit failed");
