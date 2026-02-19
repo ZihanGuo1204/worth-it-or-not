@@ -4,7 +4,14 @@ Author: Zihan Guo, Fanchao Yu
 Class: CS5610 Web Development  
 Instructor: John Alexis Guerra Gomez  
 
-Live Demo: https://your-deployment-url-here  
+Live Demo: https://your-deployment-url-here 
+Note:
+
+Because Render free tier does not persist disk storage,
+uploaded images may be deleted after redeploy or restart.
+
+The system automatically detects missing images and displays a fallback image instead.
+
 GitHub Repo: https://github.com/your-username/worth-it-or-not
 
 ---
@@ -21,8 +28,9 @@ This application allows students to:
 - Compare expectation vs. reality  
 - Share their own experiences  
 - Upload images of purchased items (optional)  
+- Edit uploaded images (replace or remove existing images)
 - Track their personal purchase history (My Posts Only + Profile page)  
-- Edit and delete their own posts  
+- Edit and delete their own posts using an iOS-style edit modal  
 - Paginate through large datasets (better UX for many posts)
 
 The system supports both:
@@ -114,19 +122,25 @@ Implementation:
 - Notes:
   - Category filter supports case-insensitive matching (e.g., `tech` works)
 
-## User Story 5 — Edit/Delete My Own Posts
+## User Story 5 — Edit/Delete My Own Posts (with Image Editing)
 
 As a student,  
 I want to edit or delete my own posts,  
-So that I can correct or remove my reflections.
+So that I can correct or update my reflections.
 
 Implementation:
 
 - API:
   - `PUT /api/posts/:id`
   - `DELETE /api/posts/:id`
+  - `POST /api/upload`
 - Page: Home
-- Notes:
+- Includes:
+  - iOS-style edit modal
+  - Edit text fields
+  - Replace image
+  - Remove image
+  - Preview image before saving
   - Edit/Delete buttons only appear for posts created under the current profileId
 
 ---
@@ -139,8 +153,17 @@ Implementation:
 - CSS3 (Modular CSS Architecture)  
 - Vanilla JavaScript (ES6 Modules)  
 
+UI Features:
+
+- iOS-style edit modal
+- Image preview before upload
+- Image replacement and removal
+- Automatic fallback image display
+
 No React used.  
 No template engines used.
+
+---
 
 ## Backend
 
@@ -149,6 +172,12 @@ No template engines used.
 - MongoDB  
 - MongoDB Native Driver  
 - Multer (file upload)
+
+Image System:
+
+- Image upload endpoint (`/api/upload`)
+- Static image serving via `/uploads`
+- Automatic fallback image handling when image is missing
 
 No Mongoose used.
 
@@ -170,6 +199,7 @@ Backend:
 - MongoDB database collections  
 - Image upload via Multer (saved under `/uploads`)  
 - Serves uploaded images via: `/uploads/<filename>`
+- Automatic fallback image system if uploaded images are missing
 
 ---
 
@@ -181,9 +211,11 @@ Core Features:
 - Submit purchase reflections (Submit)
 - Profile creation and history tracking (Profile + My Posts Only)
 - Upload images (optional)
+- Edit posts using iOS-style modal
+- Replace or remove uploaded images
+- Delete posts
 - Filter posts by category (case-insensitive)
 - Pagination (Prev/Next + page size)
-- Edit/Delete your own posts
 
 Technical Features:
 
@@ -390,6 +422,11 @@ worth-it-or-not/
 
 client/
 │
+├── assets/
+│   └── image-missing.png
+│
+├── index.html
+│
 ├── index.html
 ├── app.js
 ├── api.js
@@ -506,6 +543,9 @@ Advanced Features:
 • Page size selection  
 • Client-side routing  
 • REST API architecture  
+• iOS-style edit modal  
+• Image replacement and removal  
+• Automatic fallback image handling    
 
 ---
 
@@ -515,8 +555,10 @@ MIT License
 
 ---
 
-# Author
+# Authors
 
 Zihan Guo  
+Fanchao Yu  
+
 CS5610 Web Development  
 Northeastern University
