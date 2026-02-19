@@ -234,3 +234,117 @@ button:disabled {
 .error {
   color: var(--danger);
 }
+
+/* =========================
+   Modal (Post detail modal)
+   Used by Home page: #postModal, .postModalCard, etc.
+   ========================= */
+
+.postModal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  /* overlay */
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.postModal.open {
+  display: flex;
+}
+
+.postModalCard {
+  width: min(980px, 96vw);
+  max-height: min(78vh, 720px);
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+
+  /* ✅ 关键：用主题变量，light 就是浅色，dark 就是深色 */
+  background: var(--card2);
+  color: var(--text);
+}
+
+@media (max-width: 860px) {
+  .postModalCard {
+    grid-template-columns: 1fr;
+    max-height: 86vh;
+  }
+}
+
+.postModalClose {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+
+  border-radius: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.postModalImgWrap {
+  background: rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-theme="dark"] .postModalImgWrap {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.postModalImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.postModalBody {
+  padding: 18px 18px 20px 18px;
+  overflow: auto;
+}
+
+.postModalTitle {
+  font-size: 30px;
+  margin-bottom: 4px;
+}
+
+.postModalBy {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.postModalMeta {
+  margin: 12px 0 16px 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.postModalSection .label {
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.postModalSection .text {
+  color: var(--text);
+  opacity: 0.95;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
