@@ -45,8 +45,42 @@ export function renderSubmit(container) {
           </div>
 
           <div>
-            <label>Category</label>
-            <input name="category" placeholder="Kitchen / Tech / School..." required />
+          <label>Category</label>
+          <input
+          name="category"
+          list="categoryList"
+          placeholder="e.g. Tech"
+          required
+          />
+          
+          <datalist id="categoryList">
+          
+          <option value="Tech"></option>
+          
+          <option value="School"></option>
+          
+          <option value="Kitchen"></option>
+          
+          <option value="Food"></option>
+          
+          <option value="Fashion"></option>
+          
+          <option value="Fitness"></option>
+          
+          <option value="Beauty"></option>
+          
+          <option value="Home"></option>
+          
+          <option value="Travel"></option>
+          
+          <option value="Transportation"></option>
+          
+          <option value="Subscriptions"></option>
+          
+          <option value="Entertainment"></option>
+          
+          </datalist>
+          
           </div>
 
           <div>
