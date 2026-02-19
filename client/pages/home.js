@@ -146,12 +146,14 @@ export async function renderHome(container) {
     postsEl.innerHTML = items
       .map((p) => {
         const canEdit = String(profileId || "") === String(p.profileId || "");
-
         const preview = p.expectation || "";
+
         const safeTitle = escapeHtml(p.itemName || "");
         const safeCategory = escapeHtml(p.category || "");
         const safeSentiment = escapeHtml(p.sentiment || "");
         const safeBy = escapeHtml(p.author?.nickname || "unknown");
+
+        const safeImageUrl = escapeHtml(p.imageUrl || "");
 
         return `
           <article class="post"
@@ -162,7 +164,7 @@ export async function renderHome(container) {
             data-by="${safeBy}"
             data-expectation="${escapeHtml(p.expectation || "")}"
             data-reality="${escapeHtml(p.reality || "")}"
-            data-imageurl="${escapeHtml(p.imageUrl || "")}"
+            data-imageurl="${safeImageUrl}"
           >
             ${
               p.imageUrl
@@ -244,11 +246,13 @@ export async function renderHome(container) {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closePostModal();
   });
-
   modal.querySelector(".postModalClose").addEventListener("click", closePostModal);
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closePostModal();
+    if (e.key === "Escape") {
+      closePostModal();
+      closeEditModal();
+    }
   });
 
   function openModalFromCard(card) {
@@ -258,7 +262,7 @@ export async function renderHome(container) {
     const sentiment = card.dataset.sentiment || "";
     const expectation = card.dataset.expectation || "";
     const reality = card.dataset.reality || "";
-    const imageUrl = card.dataset.imageurl || "";
+    const imageUrl = (card.dataset.imageurl || "").trim();
 
     modal.querySelector(".postModalTitle").textContent = title;
     modal.querySelector(".postModalBy").textContent = by ? `(by ${by})` : "";
@@ -297,7 +301,7 @@ export async function renderHome(container) {
     modal.classList.add("open");
   }
 
-  // ===== iOS-style Edit Modal (create once) =====
+  // ===== Edit Modal =====
   let editModal = document.getElementById("editModal");
   if (!editModal) {
     editModal = document.createElement("div");
@@ -312,7 +316,6 @@ export async function renderHome(container) {
 
         <form class="editModalForm" id="editModalForm">
 
-          <!-- Image edit block -->
           <div class="field">
             <label>Photo</label>
             <div class="editImageRow">
@@ -378,19 +381,29 @@ export async function renderHome(container) {
   const editUploadHint = editModal.querySelector("#editUploadHint");
 
   let editingId = null;
-  let editingOriginalImageUrl = null;
-  let editingNewFile = null;
+  let originalImageUrl = "";
+  let newImageFile = null;
   let removeImageRequested = false;
+
+  function setEditPreview(url) {
+    editImagePreview.src = url || DEFAULT_IMAGE_URL;
+    editImagePreview.onerror = () => {
+      editImagePreview.onerror = null;
+      editImagePreview.src = DEFAULT_IMAGE_URL;
+    };
+  }
 
   function closeEditModal() {
     editModal.classList.remove("open");
     editingId = null;
-    editingOriginalImageUrl = null;
-    editingNewFile = null;
+    originalImageUrl = "";
+    newImageFile = null;
     removeImageRequested = false;
     editImageFile.value = "";
     editUploadHint.style.display = "none";
     editUploadHint.textContent = "";
+    editMsg.style.display = "none";
+    editMsg.textContent = "";
     editSaveBtn.disabled = false;
   }
 
@@ -401,18 +414,6 @@ export async function renderHome(container) {
   editModal.querySelector(".editModalClose").addEventListener("click", closeEditModal);
   editModal.querySelector("#editCancelBtn").addEventListener("click", closeEditModal);
 
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeEditModal();
-  });
-
-  function setEditPreview(url) {
-    editImagePreview.src = url || DEFAULT_IMAGE_URL;
-    editImagePreview.onerror = () => {
-      editImagePreview.onerror = null;
-      editImagePreview.src = DEFAULT_IMAGE_URL;
-    };
-  }
-
   editImageFile.addEventListener("change", () => {
     const file = editImageFile.files?.[0];
     if (!file) return;
@@ -421,14 +422,13 @@ export async function renderHome(container) {
       editUploadHint.textContent = "❌ Please choose an image file.";
       editUploadHint.style.display = "block";
       editImageFile.value = "";
-      editingNewFile = null;
+      newImageFile = null;
       return;
     }
 
     removeImageRequested = false;
-    editingNewFile = file;
+    newImageFile = file;
 
-    // local preview
     const blobUrl = URL.createObjectURL(file);
     setEditPreview(blobUrl);
 
@@ -438,7 +438,7 @@ export async function renderHome(container) {
 
   editRemoveImgBtn.addEventListener("click", () => {
     removeImageRequested = true;
-    editingNewFile = null;
+    newImageFile = null;
     editImageFile.value = "";
     setEditPreview(DEFAULT_IMAGE_URL);
 
@@ -449,23 +449,19 @@ export async function renderHome(container) {
   function openEditModalFromCard(card, id) {
     editingId = id;
 
-    // reset msg
     editMsg.style.display = "none";
     editMsg.textContent = "";
-
-    // reset image state
-    editingOriginalImageUrl = (card.dataset.imageurl || "").trim() || null;
-    editingNewFile = null;
-    removeImageRequested = false;
-    editImageFile.value = "";
     editSaveBtn.disabled = false;
 
-    // preview current (or fallback)
-    setEditPreview(editingOriginalImageUrl || DEFAULT_IMAGE_URL);
+    originalImageUrl = (card.dataset.imageurl || "").trim();
+    newImageFile = null;
+    removeImageRequested = false;
+    editImageFile.value = "";
+
+    setEditPreview(originalImageUrl || DEFAULT_IMAGE_URL);
     editUploadHint.style.display = "none";
     editUploadHint.textContent = "";
 
-    // fill form from dataset
     editForm.editItemName.value = card.dataset.itemname || "";
     editForm.editCategory.value = card.dataset.category || "";
     editForm.editSentiment.value = card.dataset.sentiment || "meh";
@@ -492,7 +488,6 @@ export async function renderHome(container) {
       return;
     }
 
-    // disable while saving
     editSaveBtn.disabled = true;
     editMsg.style.display = "none";
     editMsg.textContent = "";
@@ -500,16 +495,16 @@ export async function renderHome(container) {
     try {
       const patch = { itemName, category, sentiment, expectation, reality };
 
-      // image update logic
+      // ✅ image update logic
       if (removeImageRequested) {
         patch.imageUrl = null;
-      } else if (editingNewFile) {
+      } else if (newImageFile) {
         editUploadHint.textContent = "Uploading image...";
         editUploadHint.style.display = "block";
-        const up = await uploadImage(editingNewFile);
+        const up = await uploadImage(newImageFile);
         patch.imageUrl = up?.imageUrl || null;
       }
-      // else: do not include imageUrl => keep existing
+      // else: don't touch imageUrl => keep existing
 
       await updatePost(editingId, patch);
 
