@@ -2,11 +2,9 @@
 import { fetchPosts, deletePost, updatePost } from "../api.js";
 import { escapeHtml } from "../utils.js";
 
-const FALLBACK_IMG = "/assets/image-missing.png";
-
 const LS_PROFILE_ID = "won_profile_id";
 
-// ✅ Default fallback image (put file at: client/assets/cat2.png)
+// Default fallback image (put file at: client/assets/image-missing.png)
 const DEFAULT_IMAGE_URL = "/assets/image-missing.png";
 const DEFAULT_IMAGE_MSG =
   "Image unavailable (Render free tier may delete uploads). Showing a default image.";
@@ -232,8 +230,9 @@ export async function renderHome(container) {
         <button class="postModalClose" type="button" aria-label="Close">✕</button>
 
         <div class="postModalImgWrap">
+          <!-- ✅ MUST match base.css class: .imageFallbackMsg -->
+          <div class="imageFallbackMsg" style="display:none;"></div>
           <img class="postModalImg" alt="post image" style="display:none;" />
-          <div class="postModalImgMsg" style="display:none;"></div>
         </div>
 
         <div class="postModalBody">
@@ -295,7 +294,7 @@ export async function renderHome(container) {
     modal.querySelector('[data-role="reality"]').textContent = reality;
 
     const img = modal.querySelector(".postModalImg");
-    const msgEl = modal.querySelector(".postModalImgMsg");
+    const msgEl = modal.querySelector(".imageFallbackMsg");
 
     // reset state every open
     img.onerror = null;
