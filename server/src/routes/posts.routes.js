@@ -1,4 +1,4 @@
-// src/routes/posts.routes.js
+// server/src/routes/posts.routes.js
 const express = require("express");
 const { ObjectId } = require("mongodb");
 
@@ -6,6 +6,12 @@ const ALLOWED_SENTIMENTS = ["worth", "not_worth", "meh"];
 
 function isNonEmptyString(v) {
   return typeof v === "string" && v.trim().length > 0;
+}
+
+function parsePositiveInt(value, fallback) {
+  const n = Number.parseInt(value, 10);
+  if (Number.isNaN(n) || n <= 0) return fallback;
+  return n;
 }
 
 function createPostsRouter(db) {
@@ -16,8 +22,15 @@ function createPostsRouter(db) {
   // CREATE post
   router.post("/", async (req, res) => {
     try {
-      const { itemName, category, expectation, reality, sentiment, profileId, imageUrl } =
-        req.body;
+      const {
+        itemName,
+        category,
+        expectation,
+        reality,
+        sentiment,
+        profileId,
+        imageUrl,
+      } = req.body;
 
       if (!isNonEmptyString(itemName)) {
         return res.status(400).json({ error: "itemName is required (string)" });
@@ -46,7 +59,7 @@ function createPostsRouter(db) {
       const profile = await profiles.findOne({ _id: profileObjectId });
       if (!profile) return res.status(404).json({ error: "profile not found" });
 
-      if (imageUrl !== undefined && typeof imageUrl !== "string") {
+      if (imageUrl !== undefined && imageUrl !== null && typeof imageUrl !== "string") {
         return res.status(400).json({ error: "imageUrl must be a string" });
       }
 
@@ -64,7 +77,6 @@ function createPostsRouter(db) {
 
       const result = await posts.insertOne(doc);
 
-      // return profile nickname too (nice UX, no auth needed)
       return res.status(201).json({
         _id: result.insertedId,
         ...doc,
@@ -75,58 +87,76 @@ function createPostsRouter(db) {
     }
   });
 
-  // READ posts (optional filter by category)
-  // also joins nickname via a simple aggregation
+  /**
+   * READ posts
+   * Query:
+   *   category (optional)
+   *   profileId (optional)  -> for "My posts only"
+   *   page (optional, default 1)
+   *   pageSize (optional, default 12, max 50)
+   *
+   * Response:
+   *   { items, page, pageSize, total, totalPages }
+   */
   router.get("/", async (req, res) => {
-  try {
-    const { category, profileId } = req.query;
+    try {
+      const category = req.query.category ? String(req.query.category).trim() : "";
+      const profileId = req.query.profileId ? String(req.query.profileId).trim() : "";
 
-    const match = {};
+      const page = parsePositiveInt(req.query.page, 1);
+      let pageSize = parsePositiveInt(req.query.pageSize, 12);
+      if (pageSize > 50) pageSize = 50;
 
-    if (category) match.category = String(category).trim();
+      const match = {};
+      if (category) match.category = category;
 
-    // ✅ add this: filter by profileId
-    if (profileId) {
-      if (!ObjectId.isValid(String(profileId))) {
-        return res.status(400).json({ error: "invalid profileId" });
+      if (profileId) {
+        if (!ObjectId.isValid(profileId)) {
+          return res.status(400).json({ error: "profileId must be a valid ObjectId" });
+        }
+        match.profileId = new ObjectId(profileId);
       }
-      match.profileId = new ObjectId(String(profileId));
-    }
 
-    if (profileId) {
-      if (!ObjectId.isValid(profileId)) {
-        return res.status(400).json({ error: "invalid profileId" });
-      }
-      match.profileId = new ObjectId(profileId);
-    }
+      const total = await posts.countDocuments(match);
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const safePage = Math.min(Math.max(page, 1), totalPages);
+      const skip = (safePage - 1) * pageSize;
 
-    const list = await posts
-      .aggregate([
-        { $match: match },
-        { $sort: { createdAt: -1 } },
-        {
-          $lookup: {
-            from: "profiles",
-            localField: "profileId",
-            foreignField: "_id",
-            as: "profile",
+      const items = await posts
+        .aggregate([
+          { $match: match },
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: pageSize },
+          {
+            $lookup: {
+              from: "profiles",
+              localField: "profileId",
+              foreignField: "_id",
+              as: "profile",
+            },
           },
-        },
-        { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
-        {
-          $addFields: {
-            author: { _id: "$profile._id", nickname: "$profile.nickname" },
+          { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
+          {
+            $addFields: {
+              author: { _id: "$profile._id", nickname: "$profile.nickname" },
+            },
           },
-        },
-        { $project: { profile: 0 } },
-      ])
-      .toArray();
+          { $project: { profile: 0 } },
+        ])
+        .toArray();
 
-    return res.json(list);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
+      return res.json({
+        items,
+        page: safePage,
+        pageSize,
+        total,
+        totalPages,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
 
   // READ single post by id
   router.get("/:id", async (req, res) => {
@@ -148,10 +178,7 @@ function createPostsRouter(db) {
           { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
           {
             $addFields: {
-              author: {
-                _id: "$profile._id",
-                nickname: "$profile.nickname",
-              },
+              author: { _id: "$profile._id", nickname: "$profile.nickname" },
             },
           },
           { $project: { profile: 0 } },
@@ -165,37 +192,46 @@ function createPostsRouter(db) {
     }
   });
 
-  // UPDATE post by id (edit text fields + sentiment)
+  // UPDATE post by id
   router.put("/:id", async (req, res) => {
     try {
       const { id } = req.params;
       if (!ObjectId.isValid(id)) return res.status(400).json({ error: "invalid id" });
 
-      const { itemName, category, expectation, reality, sentiment } = req.body;
+      const { itemName, category, expectation, reality, sentiment, imageUrl } = req.body;
 
       const patch = {};
+
       if (itemName !== undefined) {
-        if (!isNonEmptyString(itemName))
+        if (!isNonEmptyString(itemName)) {
           return res.status(400).json({ error: "itemName must be a non-empty string" });
+        }
         patch.itemName = itemName.trim();
       }
+
       if (category !== undefined) {
-        if (!isNonEmptyString(category))
+        if (!isNonEmptyString(category)) {
           return res.status(400).json({ error: "category must be a non-empty string" });
+        }
         patch.category = category.trim();
       }
+
       if (expectation !== undefined) {
-        if (!isNonEmptyString(expectation))
+        if (!isNonEmptyString(expectation)) {
           return res
             .status(400)
             .json({ error: "expectation must be a non-empty string" });
+        }
         patch.expectation = expectation.trim();
       }
+
       if (reality !== undefined) {
-        if (!isNonEmptyString(reality))
+        if (!isNonEmptyString(reality)) {
           return res.status(400).json({ error: "reality must be a non-empty string" });
+        }
         patch.reality = reality.trim();
       }
+
       if (sentiment !== undefined) {
         if (!ALLOWED_SENTIMENTS.includes(sentiment)) {
           return res
@@ -203,6 +239,13 @@ function createPostsRouter(db) {
             .json({ error: "sentiment must be: worth | not_worth | meh" });
         }
         patch.sentiment = sentiment;
+      }
+
+      if (imageUrl !== undefined) {
+        if (imageUrl !== null && typeof imageUrl !== "string") {
+          return res.status(400).json({ error: "imageUrl must be a string or null" });
+        }
+        patch.imageUrl = imageUrl || null;
       }
 
       if (Object.keys(patch).length === 0) {
@@ -231,8 +274,9 @@ function createPostsRouter(db) {
       if (!ObjectId.isValid(id)) return res.status(400).json({ error: "invalid id" });
 
       const result = await posts.deleteOne({ _id: new ObjectId(id) });
-      if (result.deletedCount === 0)
+      if (result.deletedCount === 0) {
         return res.status(404).json({ error: "post not found" });
+      }
 
       return res.json({ ok: true, deletedId: id });
     } catch (err) {
