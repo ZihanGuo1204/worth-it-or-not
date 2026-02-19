@@ -1,6 +1,7 @@
 /* =========================
    base.css
    Theme tokens + global base + shared components
+   (Dark-only default + modal styles + image fallback msg)
    ========================= */
 
 /* ---- Theme tokens ---- */
@@ -28,7 +29,38 @@
     BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Dark */
+/* ✅ Default to dark even if data-theme is missing */
+html {
+  color-scheme: dark;
+
+  --bg: #0b0c0f;
+  --bg2: #0f1117;
+  --text: #f5f5f7;
+  --muted: rgba(245, 245, 247, 0.62);
+
+  --card: rgba(255, 255, 255, 0.06);
+  --card2: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.14);
+
+  --input: rgba(255, 255, 255, 0.08);
+  --input-border: rgba(255, 255, 255, 0.16);
+
+  --primary: #0a84ff;
+  --danger: #ff453a;
+  --ok: #30d158;
+
+  --pillBg: rgba(255, 255, 255, 0.08);
+
+  /* nav glass */
+  --navGlass: rgba(16, 17, 22, 0.62);
+  --navGlass2: rgba(16, 17, 22, 0.46);
+
+  --navTile: rgba(255, 255, 255, 0.06);
+  --navTileHover: rgba(10, 132, 255, 0.12);
+  --navTileActive: rgba(255, 255, 255, 0.1);
+}
+
+/* Dark (keep for compatibility if JS sets data-theme) */
 html[data-theme="dark"] {
   color-scheme: dark;
 
@@ -216,7 +248,7 @@ button:disabled {
   padding: 18px;
   z-index: 9999;
 
-  /* Background overlay (works for both themes) */
+  /* Background overlay */
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
 }
@@ -225,7 +257,10 @@ button:disabled {
   display: flex;
 }
 
+/* Make close button position relative to the card */
 .postModalCard {
+  position: relative;
+
   width: min(980px, 96vw);
   max-height: min(560px, 86vh);
   overflow: hidden;
@@ -261,7 +296,9 @@ button:disabled {
   cursor: pointer;
 }
 
+/* Image side */
 .postModalImgWrap {
+  position: relative; /* ✅ anchor for overlay msg */
   background: var(--card);
   display: flex;
   align-items: center;
@@ -275,6 +312,29 @@ button:disabled {
   max-height: 560px;
   object-fit: cover;
   display: block;
+}
+
+/* ✅ Fallback message overlay (top-left) */
+.imageFallbackMsg {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+
+  max-width: 280px;
+  padding: 10px 14px;
+  border-radius: 14px;
+
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+
+  background: rgba(20, 20, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(18px);
+
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 /* right side */

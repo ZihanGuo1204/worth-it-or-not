@@ -1,27 +1,18 @@
 // client/app.js
-// Hash router + VisionOS-style glass nav + theme toggle (clean + stable)
+// Hash router + glass nav (dark-only, no theme toggle)
 
 import { renderHome } from "./pages/home.js";
 import { renderSubmit } from "./pages/submit.js";
 import { renderProfile } from "./pages/profile.js";
 
-const THEME_KEY = "won_theme"; // "light" | "dark"
+function forceDark() {
+  // Always dark
+  document.documentElement.setAttribute("data-theme", "dark");
 
-function getTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved === "light" || saved === "dark") return saved;
-
-  const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
-  return prefersDark ? "dark" : "light";
-}
-
-function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  localStorage.setItem(THEME_KEY, theme);
-}
-
-function themeIcon(theme) {
-  return theme === "dark" ? "🌙" : "☀️";
+  // Also remove any saved theme from older versions
+  try {
+    localStorage.removeItem("won_theme");
+  } catch (_) {}
 }
 
 function setActiveLink(route) {
@@ -32,11 +23,10 @@ function setActiveLink(route) {
 }
 
 function renderNav() {
-  const currentTheme = getTheme();
-
   const nav = document.createElement("nav");
   nav.className = "topNav";
 
+  // ✅ no theme button at all
   nav.innerHTML = `
     <div class="navInner">
       <a class="brand" href="#/" aria-label="Go to Home">
@@ -48,28 +38,12 @@ function renderNav() {
         <a class="navPill" href="#/submit" data-route="submit">Submit</a>
         <a class="navPill" href="#/profile" data-route="profile">Profile</a>
       </div>
-
-      <button
-        id="themeBtn"
-        class="iconBtn"
-        type="button"
-        aria-label="Toggle theme"
-        title="Toggle theme"
-      >${themeIcon(currentTheme)}</button>
     </div>
   `;
 
   const oldNav = document.querySelector("nav");
   if (oldNav) oldNav.replaceWith(nav);
   else document.body.prepend(nav);
-
-  const themeBtn = nav.querySelector("#themeBtn");
-  themeBtn.addEventListener("click", () => {
-    const now = document.documentElement.getAttribute("data-theme") || "light";
-    const next = now === "dark" ? "light" : "dark";
-    applyTheme(next);
-    themeBtn.textContent = themeIcon(next);
-  });
 }
 
 async function renderRoute() {
@@ -102,10 +76,9 @@ async function renderRoute() {
 }
 
 function start() {
-  applyTheme(getTheme());
+  forceDark();
   renderNav();
   renderRoute();
-
   window.addEventListener("hashchange", () => renderRoute());
 }
 
