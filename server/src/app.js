@@ -10,41 +10,36 @@ const { createProfilesRouter } = require("./routes/profiles.routes");
 const { createPostsRouter } = require("./routes/posts.routes");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// ---- Frontend static (ALWAYS serve, even if DB is down) ----
-const clientDir = path.join(__dirname, "../../client");
-app.use(express.static(clientDir));
-
-// Root -> index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(clientDir, "index.html"));
-});
-
-// (Optional but nice) SPA fallback: any non-API route returns index.html
-// Helps if later you switch away from hash routes
-app.get(/^\/(?!api\/).*/, (req, res) => {
-  res.sendFile(path.join(clientDir, "index.html"));
-});
-
-// ---- Middleware ----
 app.use(express.json());
 
-// serve uploaded images
+// ✅ 1) uploads static FIRST (must be before SPA fallback)
 app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 
-// health (no DB needed)
+// ✅ 2) API routes
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, at: new Date().toISOString() });
 });
 
+const PORT = process.env.PORT || 3000;
+
 async function start() {
   const db = await connectDb(process.env.MONGO_URI);
 
-  // API
   app.use("/api/profiles", createProfilesRouter(db));
   app.use("/api/posts", createPostsRouter(db));
   app.use("/api/upload", createUploadRouter());
+
+  // ✅ 3) Frontend static
+  const clientDir = path.join(__dirname, "../../client");
+  app.use(express.static(clientDir));
+
+  // ✅ 4) SPA fallback (IMPORTANT: exclude /api and /uploads)
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) {
+      return res.status(404).send("Not found");
+    }
+    return res.sendFile(path.join(clientDir, "index.html"));
+  });
 
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
