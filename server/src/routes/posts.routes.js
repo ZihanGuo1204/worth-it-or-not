@@ -99,64 +99,73 @@ function createPostsRouter(db) {
    *   { items, page, pageSize, total, totalPages }
    */
   router.get("/", async (req, res) => {
-    try {
-      const category = req.query.category ? String(req.query.category).trim() : "";
-      const profileId = req.query.profileId ? String(req.query.profileId).trim() : "";
+  try {
+    const category = req.query.category ? String(req.query.category).trim() : "";
+    const profileId = req.query.profileId ? String(req.query.profileId).trim() : "";
 
-      const page = parsePositiveInt(req.query.page, 1);
-      let pageSize = parsePositiveInt(req.query.pageSize, 12);
-      if (pageSize > 50) pageSize = 50;
+    const page = parsePositiveInt(req.query.page, 1);
+    let pageSize = parsePositiveInt(req.query.pageSize, 12);
+    if (pageSize > 50) pageSize = 50;
 
-      const match = {};
-      if (category) match.category = category;
-
-      if (profileId) {
-        if (!ObjectId.isValid(profileId)) {
-          return res.status(400).json({ error: "profileId must be a valid ObjectId" });
-        }
-        match.profileId = new ObjectId(profileId);
-      }
-
-      const total = await posts.countDocuments(match);
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      const safePage = Math.min(Math.max(page, 1), totalPages);
-      const skip = (safePage - 1) * pageSize;
-
-      const items = await posts
-        .aggregate([
-          { $match: match },
-          { $sort: { createdAt: -1 } },
-          { $skip: skip },
-          { $limit: pageSize },
-          {
-            $lookup: {
-              from: "profiles",
-              localField: "profileId",
-              foreignField: "_id",
-              as: "profile",
-            },
-          },
-          { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
-          {
-            $addFields: {
-              author: { _id: "$profile._id", nickname: "$profile.nickname" },
-            },
-          },
-          { $project: { profile: 0 } },
-        ])
-        .toArray();
-
-      return res.json({
-        items,
-        page: safePage,
-        pageSize,
-        total,
-        totalPages,
-      });
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
+    // helper: escape regex special chars
+    function escapeRegex(s) {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
-  });
+
+    const match = {};
+
+    // ✅ category: 精确匹配但大小写不敏感 (Tech == tech == TECH)
+    if (category) {
+      match.category = { $regex: `^${escapeRegex(category)}$`, $options: "i" };
+    }
+
+    if (profileId) {
+      if (!ObjectId.isValid(profileId)) {
+        return res.status(400).json({ error: "profileId must be a valid ObjectId" });
+      }
+      match.profileId = new ObjectId(profileId);
+    }
+
+    const total = await posts.countDocuments(match);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const safePage = Math.min(Math.max(page, 1), totalPages);
+    const skip = (safePage - 1) * pageSize;
+
+    const items = await posts
+      .aggregate([
+        { $match: match },
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: pageSize },
+        {
+          $lookup: {
+            from: "profiles",
+            localField: "profileId",
+            foreignField: "_id",
+            as: "profile",
+          },
+        },
+        { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            author: { _id: "$profile._id", nickname: "$profile.nickname" },
+          },
+        },
+        { $project: { profile: 0 } },
+      ])
+      .toArray();
+
+    return res.json({
+      items,
+      page: safePage,
+      pageSize,
+      total,
+      totalPages,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
   // READ single post by id
   router.get("/:id", async (req, res) => {

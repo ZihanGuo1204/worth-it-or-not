@@ -4,6 +4,12 @@ import { escapeHtml } from "../utils.js";
 const LS_PROFILE_ID = "won_profile_id";
 const LS_PROFILE_NAME = "won_profile_name";
 
+function normalizeCategory(v) {
+  const s = String(v || "").trim().toLowerCase();
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function renderSubmit(container) {
   const profileId = localStorage.getItem(LS_PROFILE_ID);
   const profileName = localStorage.getItem(LS_PROFILE_NAME);
@@ -180,13 +186,18 @@ export function renderSubmit(container) {
 
     const post = {
       itemName: String(data.get("itemName") || "").trim(),
-      category: String(data.get("category") || "").trim(),
+      category: normalizeCategory(data.get("category")),
       expectation: String(data.get("expectation") || "").trim(),
       reality: String(data.get("reality") || "").trim(),
       sentiment: data.get("sentiment"),
       profileId,
-      imageUrl: uploadedImageUrl, // ⭐ attach uploaded url (or null)
+      imageUrl: uploadedImageUrl, 
     };
+
+      if (!post.category) {
+    msg.textContent = "Category cannot be empty.";
+    return;
+  }
 
     try {
       await createPost(post);
