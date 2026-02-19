@@ -289,15 +289,26 @@ Relationship:
 
 # Screenshots
 
-(Add screenshots here)
-
 Suggested screenshots:
 
 - Home page with posts + pagination
+![Home Page](screenshots/home.png)
+
 - Post detail modal
+![Edit Modal](screenshots/edit.png)
+![Edit Modal](screenshots/edit2.png)
+
 - Submit page with image preview
+![Submit Page](screenshots/submit.png)
+
 - Profile page (nickname saved)
-- My Posts Only checkbox working
+![Profile Page](screenshots/profile.png)
+
+- Post detail Modal
+
+Click a post to view full details:
+
+![Detail Modal](screenshots/modal.png)
 
 ---
 
