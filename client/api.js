@@ -1,20 +1,23 @@
 // client/api.js
 // Small API helpers for the frontend (student-style, simple and readable)
 
-export async function fetchPosts({ category, profileId } = {}) {
+export async function fetchPosts({ category, profileId, page, pageSize } = {}) {
   const params = new URLSearchParams();
 
   if (category) params.set("category", category);
   if (profileId) params.set("profileId", profileId);
+  if (page) params.set("page", String(page));
+  if (pageSize) params.set("pageSize", String(pageSize));
 
   const url = params.toString() ? `/api/posts?${params.toString()}` : "/api/posts";
 
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
-    throw new Error("Failed to fetch posts");
+    const text = await res.text();
+    throw new Error(text || "Failed to fetch posts");
   }
 
-  return res.json();
+  return res.json(); // { items, page, pageSize, total, totalPages }
 }
 
 export async function createProfile(nickname) {
@@ -25,7 +28,8 @@ export async function createProfile(nickname) {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to create profile");
+    const text = await res.text();
+    throw new Error(text || "Failed to create profile");
   }
 
   return res.json();
