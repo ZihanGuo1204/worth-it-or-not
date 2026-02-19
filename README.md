@@ -2,7 +2,7 @@
 
 Author: Zihan Guo, Fanchao Yu  
 Class: CS5610 Web Development  
-Instructor: John Alexis Guerra Gomez
+Instructor: John Alexis Guerra Gomez  
 
 Live Demo: https://your-deployment-url-here  
 GitHub Repo: https://github.com/your-username/worth-it-or-not
@@ -11,22 +11,24 @@ GitHub Repo: https://github.com/your-username/worth-it-or-not
 
 # Project Overview
 
-Worth It or Not is a full-stack web application that helps students make smarter purchasing decisions by learning from real experiences shared by other students.
+Worth It or Not is a full-stack web application that helps students make smarter purchasing decisions by learning from real purchase reflections shared by other students.
 
-Students often purchase items based on online hype, recommendations, or assumptions, only to later realize the product was not as useful as expected.
+Students often purchase items based on online hype, recommendations, or assumptions, and later realize the product was not as useful as expected. This app makes those “expectation vs. reality” experiences easy to browse, filter, and contribute.
 
 This application allows students to:
 
-• Browse real student purchase reflections  
-• Compare expectation vs. reality  
-• Share their own experiences  
-• Upload images of purchased items  
-• Track their personal purchase history
+- Browse real student purchase reflections  
+- Compare expectation vs. reality  
+- Share their own experiences  
+- Upload images of purchased items (optional)  
+- Track their personal purchase history (My Posts Only + Profile page)  
+- Edit and delete their own posts  
+- Paginate through large datasets (better UX for many posts)
 
 The system supports both:
 
-1. Pre-purchase decision support
-2. Post-purchase reflection and tracking
+1. Pre-purchase decision support  
+2. Post-purchase reflection and tracking  
 
 ---
 
@@ -38,10 +40,8 @@ Needs help deciding whether a product is worth buying.
 
 Goals:
 
-• Avoid wasting money  
-• Learn from others' mistakes
-
----
+- Avoid wasting money  
+- Learn from others’ experiences  
 
 ## New Student
 
@@ -49,32 +49,29 @@ Needs guidance on useful items for student life.
 
 Goals:
 
-• Discover useful products  
-• Avoid unnecessary purchases
+- Discover useful products  
+- Avoid unnecessary purchases  
 
 ---
 
 # User Stories
 
-## User Story 1 — Browse Posts
+## User Story 1 — Browse Posts (with Pagination)
 
 As a student,  
 I want to browse purchase reflections,  
-So that I can learn from others' experiences.
+So that I can learn from others’ experiences.
 
 Implementation:
 
-API
+- API: `GET /api/posts`
+- Page: Home
+- Includes:
+  - Pagination (page / pageSize)
+  - Refresh button to reload
+  - Click a post card to open a detail modal
 
-GET /api/posts
-
-Page
-
-Home
-
----
-
-## User Story 2 — Submit Purchase Reflection
+## User Story 2 — Submit Purchase Reflection (with Image Upload)
 
 As a student,  
 I want to submit my purchase experience,  
@@ -82,36 +79,29 @@ So that I can share whether an item was worth it.
 
 Implementation:
 
-API
-
-POST /api/posts  
-POST /api/upload
-
-Page
-
-Submit
-
----
+- API:  
+  - `POST /api/posts`  
+  - `POST /api/upload`
+- Page: Submit
+- Includes:
+  - Optional image upload + preview
+  - Client-side validation
 
 ## User Story 3 — View Personal Purchase History
 
 As a student,  
-I want to view posts grouped by profile,  
+I want to view my own posts,  
 So that I can track my purchase history.
 
 Implementation:
 
-API
+- API: `GET /api/posts?profileId=<id>`
+- Page: Home + Profile
+- Includes:
+  - Profile page to save a nickname (profileId stored in localStorage)
+  - Home page “My posts only” checkbox uses that profileId
 
-GET /api/profiles
-
-Page
-
-Profile
-
----
-
-## User Story 4 — Filter Posts by Category
+## User Story 4 — Filter Posts by Category (Case-insensitive)
 
 As a student,  
 I want to filter posts by category,  
@@ -119,13 +109,25 @@ So that I can focus on relevant items.
 
 Implementation:
 
-API
+- API: `GET /api/posts?category=Tech`
+- Page: Home
+- Notes:
+  - Category filter supports case-insensitive matching (e.g., `tech` works)
 
-GET /api/posts?category=Tech
+## User Story 5 — Edit/Delete My Own Posts
 
-Page
+As a student,  
+I want to edit or delete my own posts,  
+So that I can correct or remove my reflections.
 
-Home
+Implementation:
+
+- API:
+  - `PUT /api/posts/:id`
+  - `DELETE /api/posts/:id`
+- Page: Home
+- Notes:
+  - Edit/Delete buttons only appear for posts created under the current profileId
 
 ---
 
@@ -133,20 +135,20 @@ Home
 
 ## Frontend
 
-HTML5  
-CSS3 (Modular CSS Architecture)  
-Vanilla JavaScript (ES6 Modules)
+- HTML5  
+- CSS3 (Modular CSS Architecture)  
+- Vanilla JavaScript (ES6 Modules)  
 
-No React used.
-
----
+No React used.  
+No template engines used.
 
 ## Backend
 
-Node.js  
-Express.js  
-MongoDB  
-MongoDB Native Driver
+- Node.js  
+- Express.js  
+- MongoDB  
+- MongoDB Native Driver  
+- Multer (file upload)
 
 No Mongoose used.
 
@@ -158,15 +160,16 @@ Client-Server architecture
 
 Frontend:
 
-• Static client served by Express  
-• Client-side rendering  
-• REST API consumption
+- Static client served by Express  
+- Client-side rendering with hash routing  
+- REST API consumption via `fetch()`  
 
 Backend:
 
-• Express REST API  
-• MongoDB database  
-• Image upload using Multer
+- Express REST API  
+- MongoDB database collections  
+- Image upload via Multer (saved under `/uploads`)  
+- Serves uploaded images via: `/uploads/<filename>`
 
 ---
 
@@ -174,19 +177,21 @@ Backend:
 
 Core Features:
 
-• Browse posts  
-• Submit purchase reflections  
-• Upload images  
-• Filter posts  
-• View profile history
+- Browse posts (Home)
+- Submit purchase reflections (Submit)
+- Profile creation and history tracking (Profile + My Posts Only)
+- Upload images (optional)
+- Filter posts by category (case-insensitive)
+- Pagination (Prev/Next + page size)
+- Edit/Delete your own posts
 
 Technical Features:
 
-• REST API  
-• Image upload system  
-• Modular CSS  
-• Client-side rendering  
-• MongoDB database
+- REST API with MongoDB
+- Image upload endpoint (`/api/upload`)
+- Modular CSS structure
+- Client-side rendering and routing
+- ESLint + Prettier for code quality
 
 ---
 
@@ -196,30 +201,28 @@ Technical Features:
 
 Fields:
 
-\_id  
-nickname  
-createdAt
-
----
+- `_id`
+- `nickname`
+- `createdAt`
 
 ## posts collection
 
 Fields:
 
-\_id  
-itemName  
-category  
-expectation  
-reality  
-sentiment  
-profileId  
-imageUrl  
-createdAt  
-updatedAt
+- `_id`
+- `itemName`
+- `category`
+- `expectation`
+- `reality`
+- `sentiment` (`worth` | `meh` | `not_worth`)
+- `profileId`
+- `imageUrl`
+- `createdAt`
+- `updatedAt`
 
 Relationship:
 
-posts.profileId → profiles.\_id
+- `posts.profileId` → `profiles._id`
 
 ---
 
@@ -227,33 +230,28 @@ posts.profileId → profiles.\_id
 
 ## Posts
 
-GET
+- `GET /api/posts`  
+  - supports pagination + optional filters
+  - query params:
+    - `category`
+    - `profileId`
+    - `page`
+    - `pageSize`
 
-/api/posts
-
-GET
-
-/api/posts?category=Tech
-
-POST
-
-/api/posts
-
----
+- `POST /api/posts`
+- `PUT /api/posts/:id`
+- `DELETE /api/posts/:id`
 
 ## Upload
 
-POST
-
-/api/upload
-
----
+- `POST /api/upload`  
+  - multipart form field name: `image`
+  - returns `{ imageUrl: "/uploads/<filename>" }`
 
 ## Profiles
 
-GET
-
-/api/profiles
+- `GET /api/profiles`
+- `POST /api/profiles`
 
 ---
 
@@ -261,118 +259,264 @@ GET
 
 (Add screenshots here)
 
-Example:
+Suggested screenshots:
 
-Home Page  
-Submit Page  
-Profile Page
+- Home page with posts + pagination
+- Post detail modal
+- Submit page with image preview
+- Profile page (nickname saved)
+- My Posts Only checkbox working
 
 ---
 
 # How to Run Locally
 
-## Clone repository
+Follow these steps to run the project on your own computer.
 
-git clone https://github.com/your-username/worth-it-or-not
+---
 
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/ZihanGuo1204/worth-it-or-not.git
 cd worth-it-or-not
+```
 
 ---
 
-## Install dependencies
+## 2. Install backend dependencies
 
+Navigate to the server folder:
+
+```bash
 cd server
-
 npm install
+```
 
 ---
 
-## Create .env file
+## 3. Create environment file
 
+Create a file:
+
+```
 server/.env
+```
+
+Add:
+
+```env
+MONGO_URI=your_mongodb_connection_string
+PORT=3000
+```
 
 Example:
 
-MONGO_URI=your_mongodb_uri
-
+```env
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/worthit
 PORT=3000
+```
 
 ---
 
-## Seed database
+## 4. (Optional) Seed database with sample data
 
+To generate demo data:
+
+```bash
 node seed.js
+```
+
+This will create:
+
+• Sample profiles  
+• Sample posts  
 
 ---
 
-## Run server
+## 5. Start the server
 
+Run:
+
+```bash
 npm start
+```
+
+Expected output:
+
+```
+MongoDB connected
+Server running at http://localhost:3000
+```
 
 ---
 
-## Open browser
+## 6. Open the application
 
+Open your browser:
+
+```
 http://localhost:3000
+```
+
+The frontend will load automatically.
+
+No additional frontend setup is required.
+
+---
+
+# Deployment
+
+This project is deployed using:
+
+Render (Web Service)
+
+The deployment includes:
+
+• Express backend  
+• MongoDB Atlas database  
+• Static frontend served by Express  
+
+Live Demo:
+
+https://your-render-url.onrender.com
 
 ---
 
 # Project Structure
 
+```
 worth-it-or-not/
 
-client/  
-&nbsp;&nbsp;&nbsp;&nbsp;app.js  
-&nbsp;&nbsp;&nbsp;&nbsp;api.js  
-&nbsp;&nbsp;&nbsp;&nbsp;utils.js  
-&nbsp;&nbsp;&nbsp;&nbsp;pages/  
-&nbsp;&nbsp;&nbsp;&nbsp;styles/
+client/
+│
+├── index.html
+├── app.js
+├── api.js
+├── utils.js
+│
+├── pages/
+│   ├── home.js
+│   ├── submit.js
+│   ├── profile.js
+│
+└── styles/
+    ├── base.css
+    ├── nav.css
+    ├── home.css
+    ├── submit.css
+    └── profile.css
 
-server/  
-&nbsp;&nbsp;&nbsp;&nbsp;src/  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;app.js  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;db.js  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;routes/
 
-&nbsp;&nbsp;&nbsp;&nbsp;uploads/  
-&nbsp;&nbsp;&nbsp;&nbsp;seed.js
+server/
+│
+├── src/
+│   ├── app.js
+│   ├── db.js
+│   │
+│   └── routes/
+│       ├── posts.routes.js
+│       ├── profiles.routes.js
+│       └── upload.routes.js
+│
+├── uploads/
+│
+├── seed.js
+└── .env
+
+
+Root files:
 
 README.md  
 DESIGN.md  
-LICENSE
+LICENSE  
+package.json  
+.gitignore
+```
 
 ---
 
 # Security
 
-Sensitive data stored in:
+Sensitive credentials are stored in:
 
+```
+server/.env
+```
+
+This file is protected using:
+
+```
+.gitignore
+```
+
+The following files are NOT committed:
+
+```
 .env
-
-Not committed to GitHub.
-
-.gitignore protects:
-
-.env  
-node_modules  
+node_modules
 uploads
+```
 
 ---
 
 # Code Quality
 
-ESLint used for linting
+This project uses:
 
-Prettier used for formatting
+ESLint — linting  
+Prettier — formatting  
 
-Run:
+Run lint:
 
+```bash
 npm run lint
+```
 
+Format code:
+
+```bash
 npm run format
+```
+
+Check format:
+
+```bash
+npm run check:format
+```
+
+---
+
+# Features Overview
+
+Core Features:
+
+• Browse posts  
+• Submit posts  
+• Edit posts  
+• Delete posts  
+• Upload images  
+• Profile system  
+• Filter posts  
+• Pagination system  
+
+Advanced Features:
+
+• Case-insensitive filtering  
+• Page size selection  
+• Client-side routing  
+• REST API architecture  
 
 ---
 
 # License
 
 MIT License
+
+---
+
+# Author
+
+Zihan Guo  
+CS5610 Web Development  
+Northeastern University
