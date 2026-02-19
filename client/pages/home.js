@@ -467,49 +467,59 @@ export async function renderHome(container) {
   }
 
   editForm.onsubmit = async (e) => {
-    e.preventDefault();
-    if (!editingId) return;
+  e.preventDefault();
+  if (!editingId) return;
 
-    const itemName = editForm.editItemName.value.trim();
-    const category = editForm.editCategory.value.trim();
-    const sentiment = editForm.editSentiment.value;
-    const expectation = editForm.editExpectation.value.trim();
-    const reality = editForm.editReality.value.trim();
+  editSaveBtn.disabled = true;
+  editMsg.style.display = "none";
 
-    if (!itemName || !category || !sentiment || !expectation || !reality) {
-      editMsg.textContent = "Please fill in all fields.";
-      editMsg.style.display = "block";
-      return;
+  try {
+
+    const patch = {
+      itemName: editForm.editItemName.value.trim(),
+      category: editForm.editCategory.value.trim(),
+      sentiment: editForm.editSentiment.value,
+      expectation: editForm.editExpectation.value.trim(),
+      reality: editForm.editReality.value.trim(),
+    };
+
+    if (removeImageRequested) {
+
+      patch.imageUrl = null;
+
+    }
+    else if (editingNewFile) {
+
+      editUploadHint.textContent = "Uploading image...";
+      editUploadHint.style.display = "block";
+
+      const up = await uploadImage(editingNewFile);
+
+      patch.imageUrl = up.imageUrl;
+
     }
 
-    editSaveBtn.disabled = true;
-    editMsg.style.display = "none";
-    editMsg.textContent = "";
+    await updatePost(editingId, patch);
 
-    try {
-      const patch = { itemName, category, sentiment, expectation, reality };
+    closeEditModal();
 
-      // ✅ image logic (THIS is the important part)
-      if (removeImageRequested) {
-        patch.imageUrl = null;
-      } else if (editingNewFile) {
-        editUploadHint.textContent = "Uploading image...";
-        editUploadHint.style.display = "block";
-        const up = await uploadImage(editingNewFile);
-        patch.imageUrl = up?.imageUrl || null;
-      }
-      // else: do not include imageUrl => keep existing
+    await loadPosts();
 
-      await updatePost(editingId, patch);
+  }
+  catch (err) {
 
-      closeEditModal();
-      await loadPosts();
-    } catch (err) {
-      editMsg.textContent = err?.message || "Edit failed";
-      editMsg.style.display = "block";
-      editSaveBtn.disabled = false;
-    }
-  };
+    editMsg.textContent = err.message;
+
+    editMsg.style.display = "block";
+
+  }
+  finally {
+
+    editSaveBtn.disabled = false;
+
+  }
+
+};
 
   // ===== Controls =====
   document.getElementById("filterBtn").onclick = () => {
