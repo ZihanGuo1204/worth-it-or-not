@@ -1,85 +1,52 @@
-// client/app.js
-// Hash router + glass nav (dark-only, no theme toggle)
+// server/src/app.js
+require("dotenv").config();
 
-import { renderHome } from "./pages/home.js";
-import { renderSubmit } from "./pages/submit.js";
-import { renderProfile } from "./pages/profile.js";
+const express = require("express");
+const path = require("path");
 
-function forceDark() {
-  // Always dark
-  document.documentElement.setAttribute("data-theme", "dark");
+const { createUploadRouter } = require("./routes/upload.routes");
+const { connectDb } = require("./db");
+const { createProfilesRouter } = require("./routes/profiles.routes");
+const { createPostsRouter } = require("./routes/posts.routes");
 
-  // Also remove any saved theme from older versions
-  try {
-    localStorage.removeItem("won_theme");
-  } catch (_) {}
-}
+const app = express();
+app.use(express.json());
 
-function setActiveLink(route) {
-  const pills = document.querySelectorAll(".navPill[data-route]");
-  pills.forEach((a) => {
-    a.classList.toggle("active", a.getAttribute("data-route") === route);
+// ✅ 1) uploads static FIRST (must be before SPA fallback)
+app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
+
+// ✅ 2) API routes
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, at: new Date().toISOString() });
+});
+
+const PORT = process.env.PORT || 3000;
+
+async function start() {
+  const db = await connectDb(process.env.MONGO_URI);
+
+  app.use("/api/profiles", createProfilesRouter(db));
+  app.use("/api/posts", createPostsRouter(db));
+  app.use("/api/upload", createUploadRouter());
+
+  // ✅ 3) Frontend static
+  const clientDir = path.join(__dirname, "../../client");
+  app.use(express.static(clientDir));
+
+  // ✅ 4) SPA fallback (IMPORTANT: exclude /api and /uploads)
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) {
+      return res.status(404).send("Not found");
+    }
+    return res.sendFile(path.join(clientDir, "index.html"));
+  });
+
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
   });
 }
 
-function renderNav() {
-  const nav = document.createElement("nav");
-  nav.className = "topNav";
-
-  // ✅ no theme button at all
-  nav.innerHTML = `
-    <div class="navInner">
-      <a class="brand" href="#/" aria-label="Go to Home">
-        <span class="brandTitle">Worth It or Not</span>
-      </a>
-
-      <div class="navCenter">
-        <a class="navPill" href="#/" data-route="home">Home</a>
-        <a class="navPill" href="#/submit" data-route="submit">Submit</a>
-        <a class="navPill" href="#/profile" data-route="profile">Profile</a>
-      </div>
-    </div>
-  `;
-
-  const oldNav = document.querySelector("nav");
-  if (oldNav) oldNav.replaceWith(nav);
-  else document.body.prepend(nav);
-}
-
-async function renderRoute() {
-  const app = document.getElementById("app") || document.querySelector("main");
-  if (!app) return;
-
-  const hash = window.location.hash || "#/";
-  const route = hash.replace("#/", "").trim();
-
-  if (route === "" || route === "/") {
-    setActiveLink("home");
-    await renderHome(app);
-    return;
-  }
-
-  if (route === "submit") {
-    setActiveLink("submit");
-    renderSubmit(app);
-    return;
-  }
-
-  if (route === "profile") {
-    setActiveLink("profile");
-    renderProfile(app);
-    return;
-  }
-
-  setActiveLink("");
-  app.innerHTML = `<h2>Not found</h2><p>Try going back to <a href="#/">Home</a>.</p>`;
-}
-
-function start() {
-  forceDark();
-  renderNav();
-  renderRoute();
-  window.addEventListener("hashchange", () => renderRoute());
-}
-
-start();
+start().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});
