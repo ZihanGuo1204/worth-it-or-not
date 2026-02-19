@@ -1,9 +1,13 @@
 /* =========================
    base.css
    Theme tokens + global base + shared components
+   FINAL VERSION
    ========================= */
 
-/* ---- Theme tokens ---- */
+/* =========================
+   Theme tokens
+   ========================= */
+
 :root {
   --radius: 18px;
   --radius-sm: 14px;
@@ -14,21 +18,33 @@
   --max: 1100px;
   --pad: 28px;
 
-  /* Controls */
   --control-h: 44px;
 
-  /* Font */
   --font:
-    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial;
 
-  /* Title font (Marker Felt is macOS-only, so include friendly fallback) */
   --title-font:
-    "Marker Felt", "Marker Felt Wide", "Patrick Hand", system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
+    "Marker Felt",
+    "Marker Felt Wide",
+    "Patrick Hand",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
-/* Light */
+/* =========================
+   Light Theme
+   ========================= */
+
 html[data-theme="light"] {
   color-scheme: light;
 
@@ -38,7 +54,7 @@ html[data-theme="light"] {
   --muted: rgba(15, 23, 42, 0.62);
 
   --card: rgba(255, 255, 255, 0.78);
-  --card2: rgba(255, 255, 255, 0.92);
+  --card2: rgba(255, 255, 255, 0.95);
   --border: rgba(15, 23, 42, 0.12);
 
   --input: rgba(255, 255, 255, 0.95);
@@ -49,17 +65,12 @@ html[data-theme="light"] {
   --ok: #34c759;
 
   --pillBg: rgba(15, 23, 42, 0.06);
-
-  /* nav glass */
-  --navGlass: rgba(255, 255, 255, 0.7);
-  --navGlass2: rgba(255, 255, 255, 0.52);
-
-  --navTile: rgba(255, 255, 255, 0.7);
-  --navTileHover: rgba(10, 132, 255, 0.1);
-  --navTileActive: rgba(255, 255, 255, 0.92);
 }
 
-/* Dark */
+/* =========================
+   Dark Theme
+   ========================= */
+
 html[data-theme="dark"] {
   color-scheme: dark;
 
@@ -80,17 +91,12 @@ html[data-theme="dark"] {
   --ok: #30d158;
 
   --pillBg: rgba(255, 255, 255, 0.08);
-
-  /* nav glass */
-  --navGlass: rgba(16, 17, 22, 0.62);
-  --navGlass2: rgba(16, 17, 22, 0.46);
-
-  --navTile: rgba(255, 255, 255, 0.06);
-  --navTileHover: rgba(10, 132, 255, 0.12);
-  --navTileActive: rgba(255, 255, 255, 0.1);
 }
 
-/* ---- Global base ---- */
+/* =========================
+   Global base
+   ========================= */
+
 * {
   box-sizing: border-box;
 }
@@ -102,55 +108,73 @@ body {
 
 body {
   margin: 0;
+
   font-family: var(--font);
+
   color: var(--text);
+
   background:
-    radial-gradient(900px 520px at 20% 10%, rgba(10, 132, 255, 0.14), transparent 60%),
-    radial-gradient(900px 520px at 80% 20%, rgba(175, 82, 222, 0.12), transparent 60%),
+    radial-gradient(
+      900px 520px at 20% 10%,
+      rgba(10, 132, 255, 0.14),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 520px at 80% 20%,
+      rgba(175, 82, 222, 0.12),
+      transparent 60%
+    ),
     linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
 }
 
 a {
   color: var(--primary);
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
 }
 
 h1,
 h2,
 h3 {
   margin: 0 0 10px 0;
-  letter-spacing: -0.02em;
 }
+
 p {
   margin: 0;
 }
 
-/* ---- App layout ---- */
+/* =========================
+   Layout
+   ========================= */
+
 main,
 #app,
 .container {
   max-width: var(--max);
+
   margin: 0 auto;
+
   padding: var(--pad);
 }
 
 /* =========================
-   Cards & sections
+   Cards
    ========================= */
+
 .card {
   background: var(--card);
+
   border: 1px solid var(--border);
+
   border-radius: var(--radius);
+
   box-shadow: var(--shadow);
 }
 
+/* =========================
+   Titles
+   ========================= */
+
 .sectionTitle {
   font-size: 44px;
-  line-height: 1.05;
-  margin-bottom: 6px;
 }
 
 .subtle {
@@ -158,11 +182,14 @@ main,
 }
 
 /* =========================
-   Form controls
+   Forms
    ========================= */
+
 label {
   font-weight: 700;
+
   display: inline-block;
+
   margin-bottom: 6px;
 }
 
@@ -170,90 +197,98 @@ input,
 textarea,
 select {
   width: 100%;
+
   padding: 12px 14px;
+
   border-radius: 14px;
+
   border: 1px solid var(--input-border);
+
   background: var(--input);
+
   color: var(--text);
-  outline: none;
 }
 
 textarea {
   resize: vertical;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: rgba(10, 132, 255, 0.55);
-  box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.18);
-}
-
-button {
-  font: inherit;
-}
+/* =========================
+   Buttons
+   ========================= */
 
 .btnRow {
   display: flex;
+
   gap: 10px;
-  flex-wrap: wrap;
 }
 
-button,
-.btn {
-  border: 1px solid var(--border);
-  background: var(--card2);
-  color: var(--text);
+button {
   border-radius: 999px;
+
+  border: 1px solid var(--border);
+
+  background: var(--card2);
+
+  color: var(--text);
+
   padding: 10px 14px;
+
   cursor: pointer;
 }
 
-button.primary,
-.btn.primary {
+button.primary {
   background: var(--primary);
-  border-color: transparent;
+
   color: white;
+
+  border: none;
 }
 
-button:hover {
-  filter: brightness(1.05);
-}
 button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  opacity: 0.5;
 }
+
+/* =========================
+   Messages
+   ========================= */
 
 .msg {
   margin-top: 10px;
+
   color: var(--muted);
 }
+
 .empty {
   color: var(--muted);
 }
+
 .error {
   color: var(--danger);
 }
 
-/* =========================
-   Modal (Post detail modal)
-   Used by Home page: #postModal, .postModalCard, etc.
-   ========================= */
+/* =========================================================
+   POST MODAL — FINAL FIXED VERSION
+   ========================================================= */
 
 .postModal {
   position: fixed;
+
   inset: 0;
-  z-index: 9999;
 
   display: none;
+
   align-items: center;
+
   justify-content: center;
 
   padding: 24px;
 
-  /* overlay */
+  z-index: 9999;
+
   background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
+
+  backdrop-filter: blur(10px);
 }
 
 .postModal.open {
@@ -261,90 +296,115 @@ button:disabled {
 }
 
 .postModalCard {
-  width: min(980px, 96vw);
-  max-height: min(78vh, 720px);
+  width: min(1100px, 96vw);
+
+  max-height: min(680px, 86vh);
+
   overflow: hidden;
 
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-
   border-radius: 22px;
+
   border: 1px solid var(--border);
+
   box-shadow: var(--shadow);
 
-  /* ✅ 关键：用主题变量，light 就是浅色，dark 就是深色 */
   background: var(--card2);
-  color: var(--text);
-}
 
-@media (max-width: 860px) {
-  .postModalCard {
-    grid-template-columns: 1fr;
-    max-height: 86vh;
-  }
+  color: var(--text);
+
+  display: grid;
+
+  grid-template-columns: 1.05fr 1fr;
 }
 
 .postModalClose {
   position: absolute;
+
   top: 18px;
+
   right: 18px;
 
+  width: 44px;
+
+  height: 44px;
+
   border-radius: 14px;
-  padding: 10px 12px;
+
   border: 1px solid var(--border);
+
   background: var(--card2);
+
   color: var(--text);
+
   cursor: pointer;
 }
 
 .postModalImgWrap {
-  background: rgba(0, 0, 0, 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  background: var(--card);
 
-html[data-theme="dark"] .postModalImgWrap {
-  background: rgba(255, 255, 255, 0.06);
+  border-right: 1px solid var(--border);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
 }
 
 .postModalImg {
   width: 100%;
+
   height: 100%;
-  object-fit: cover;
+
+  object-fit: contain;
 }
 
 .postModalBody {
-  padding: 18px 18px 20px 18px;
+  padding: 26px;
+
   overflow: auto;
 }
 
 .postModalTitle {
-  font-size: 30px;
-  margin-bottom: 4px;
+  font-size: 28px;
 }
 
 .postModalBy {
   color: var(--muted);
-  font-size: 14px;
 }
 
 .postModalMeta {
-  margin: 12px 0 16px 0;
+  margin: 14px 0;
+
   display: flex;
+
   gap: 10px;
+
   flex-wrap: wrap;
 }
 
+.postModalSection {
+  margin-top: 12px;
+}
+
 .postModalSection .label {
-  font-weight: 800;
-  margin-bottom: 6px;
+  font-weight: bold;
 }
 
 .postModalSection .text {
-  color: var(--text);
-  opacity: 0.95;
-  line-height: 1.5;
-  margin-bottom: 14px;
-  white-space: pre-wrap;
+  margin-top: 4px;
+}
+
+/* Mobile */
+
+@media (max-width: 860px) {
+  .postModalCard {
+    grid-template-columns: 1fr;
+  }
+
+  .postModalImgWrap {
+    border-right: none;
+
+    border-bottom: 1px solid var(--border);
+  }
 }
