@@ -16,10 +16,11 @@ export async function renderHome(container) {
   let currentPage = 1;
   let pageSize = 12;
   let totalPages = 1;
-  let lastQueryKey = "";
+  let lastQueryKey = ""; // used to auto-reset page when filters change
 
   container.innerHTML = `
     <div class="home">
+
       <div class="homeHeader">
         <h1 class="sectionTitle">Home</h1>
         <p class="hint">Tip: Edit/Delete buttons only show for your own posts.</p>
@@ -59,6 +60,7 @@ export async function renderHome(container) {
         </div>
       </div>
 
+      <!-- Pagination UI -->
       <div class="pager" style="display:flex; gap:10px; align-items:center; margin:14px 0;">
         <button id="prevPageBtn" type="button">Prev</button>
         <div id="pageInfo" style="opacity:0.9;">Page 1 / 1</div>
@@ -167,7 +169,7 @@ export async function renderHome(container) {
             ${
               p.imageUrl
                 ? `<img class="postImage" src="${p.imageUrl}" alt="${safeTitle}" loading="lazy"
-                    onerror="this.style.display='none';" />`
+                     onerror="this.style.display='none';" />`
                 : ""
             }
 
@@ -270,12 +272,10 @@ export async function renderHome(container) {
     const img = modal.querySelector(".postModalImg");
     const msgEl = modal.querySelector(".imageFallbackMsg");
 
-    // reset
     img.onerror = null;
     msgEl.style.display = "none";
     msgEl.textContent = "";
 
-    // No image -> default + msg
     if (!imageUrl) {
       img.src = DEFAULT_IMAGE_URL;
       img.style.display = "block";
@@ -285,12 +285,11 @@ export async function renderHome(container) {
       return;
     }
 
-    // Try real image
     img.src = imageUrl;
     img.style.display = "block";
 
     img.onerror = () => {
-      img.onerror = null; // prevent loop
+      img.onerror = null;
       img.src = DEFAULT_IMAGE_URL;
       img.style.display = "block";
       msgEl.textContent = DEFAULT_IMAGE_MSG;
@@ -299,6 +298,135 @@ export async function renderHome(container) {
 
     modal.classList.add("open");
   }
+
+  // ===== iOS-style Edit Modal (create once) =====
+  let editModal = document.getElementById("editModal");
+  if (!editModal) {
+    editModal = document.createElement("div");
+    editModal.id = "editModal";
+    editModal.className = "editModal";
+    editModal.innerHTML = `
+      <div class="editModalCard" role="dialog" aria-modal="true" aria-label="Edit post">
+        <div class="editModalHeader">
+          <div class="editModalTitle">Edit Post</div>
+          <button class="editModalClose" type="button" aria-label="Close">✕</button>
+        </div>
+
+        <form class="editModalForm" id="editModalForm">
+          <div class="field">
+            <label for="editItemName">Item name</label>
+            <input id="editItemName" name="itemName" required />
+          </div>
+
+          <div class="field">
+            <label for="editCategory">Category</label>
+            <input id="editCategory" name="category" placeholder="e.g. Tech" required />
+          </div>
+
+          <div class="field">
+            <label for="editSentiment">Sentiment</label>
+            <select id="editSentiment" name="sentiment" required>
+              <option value="worth">worth</option>
+              <option value="not_worth">not_worth</option>
+              <option value="meh">meh</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="editExpectation">Expectation</label>
+            <textarea id="editExpectation" name="expectation" rows="3" required></textarea>
+          </div>
+
+          <div class="field">
+            <label for="editReality">Reality</label>
+            <textarea id="editReality" name="reality" rows="3" required></textarea>
+          </div>
+
+          <div class="editModalFooter">
+            <button type="button" id="editCancelBtn">Cancel</button>
+            <button type="submit" class="primary" id="editSaveBtn">Save</button>
+          </div>
+
+          <div class="editModalMsg" id="editModalMsg"></div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(editModal);
+  }
+
+  const editForm = editModal.querySelector("#editModalForm");
+  const editMsg = editModal.querySelector("#editModalMsg");
+
+  let editingId = null;
+
+  function closeEditModal() {
+    editModal.classList.remove("open");
+    editingId = null;
+  }
+
+  // close behaviors
+  editModal.addEventListener("click", (e) => {
+    if (e.target === editModal) closeEditModal();
+  });
+  editModal.querySelector(".editModalClose").addEventListener("click", closeEditModal);
+  editModal.querySelector("#editCancelBtn").addEventListener("click", closeEditModal);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeEditModal();
+    }
+  });
+
+  function openEditModalFromCard(card, id) {
+    editingId = id;
+
+    // reset msg
+    editMsg.style.display = "none";
+    editMsg.textContent = "";
+
+    // fill form from dataset (dataset already escaped)
+    editForm.editItemName.value = card.dataset.itemname || "";
+    editForm.editCategory.value = card.dataset.category || "";
+    editForm.editSentiment.value = card.dataset.sentiment || "meh";
+    editForm.editExpectation.value = card.dataset.expectation || "";
+    editForm.editReality.value = card.dataset.reality || "";
+
+    editModal.classList.add("open");
+    editForm.editItemName.focus();
+  }
+
+  editForm.onsubmit = async (e) => {
+    e.preventDefault();
+    if (!editingId) return;
+
+    const itemName = editForm.editItemName.value.trim();
+    const category = editForm.editCategory.value.trim();
+    const sentiment = editForm.editSentiment.value;
+    const expectation = editForm.editExpectation.value.trim();
+    const reality = editForm.editReality.value.trim();
+
+    if (!itemName || !category || !sentiment || !expectation || !reality) {
+      editMsg.textContent = "Please fill in all fields.";
+      editMsg.style.display = "block";
+      return;
+    }
+
+    try {
+      await updatePost(editingId, {
+        itemName,
+        category,
+        sentiment,
+        expectation,
+        reality,
+      });
+
+      closeEditModal();
+      await loadPosts();
+    } catch (err) {
+      editMsg.textContent = err?.message || "Edit failed";
+      editMsg.style.display = "block";
+    }
+  };
 
   // ===== Controls =====
   document.getElementById("filterBtn").onclick = () => {
@@ -355,39 +483,9 @@ export async function renderHome(container) {
       }
 
       if (btn.classList.contains("editBtn")) {
-        try {
-          const card = btn.closest?.("article.post");
-          if (!card) return;
-
-          const currentItemName = card.dataset.itemname || "";
-          const currentCategory = card.dataset.category || "";
-          const currentSentiment = card.dataset.sentiment || "";
-          const currentExpectation = card.dataset.expectation || "";
-          const currentReality = card.dataset.reality || "";
-
-          const itemName = prompt("Edit item name:", currentItemName);
-          if (itemName === null) return;
-
-          const category = prompt("Edit category:", currentCategory);
-          if (category === null) return;
-
-          const sentiment = prompt(
-            "Edit sentiment (worth | not_worth | meh):",
-            currentSentiment
-          );
-          if (sentiment === null) return;
-
-          const expectation = prompt("Edit expectation:", currentExpectation);
-          if (expectation === null) return;
-
-          const reality = prompt("Edit reality:", currentReality);
-          if (reality === null) return;
-
-          await updatePost(id, { itemName, category, sentiment, expectation, reality });
-          await loadPosts();
-        } catch (err) {
-          alert(err.message || "Edit failed");
-        }
+        const card = btn.closest?.("article.post");
+        if (!card) return;
+        openEditModalFromCard(card, id);
         return;
       }
 
