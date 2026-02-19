@@ -426,3 +426,23 @@
 
   flex: 0 1 auto; /* allow shrink, no overlap */
 }
+
+/* ===== Fix filter input width ===== */
+
+.filterRow input,
+.filterRow select {
+  width: 100%;
+  max-width: 520px;
+}
+
+.filterRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btnRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
