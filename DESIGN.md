@@ -416,10 +416,6 @@ Features:
 • Edit/Delete posts  
 • Image display  
 
-Screenshot:
-
-(Add screenshot here)
-
 ---
 
 ## Submit Page
@@ -429,10 +425,6 @@ Features:
 • Submit form  
 • Upload image  
 • Preview image  
-
-Screenshot:
-
-(Add screenshot here)
 
 ---
 
