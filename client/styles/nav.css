@@ -99,7 +99,6 @@ a.navPill:hover {
   box-shadow: var(--shadow-soft);
 }
 
-/* ✅ Active should NOT be bright blue */
 a.navPill.active {
   background: var(--navTileActive);
   border-color: rgba(10, 132, 255, 0.26);
