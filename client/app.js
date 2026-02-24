@@ -83,3 +83,14 @@ function start() {
 }
 
 start();
+
+// Peer - Review Comments
+// Great use case to help students not splurge on unnecessary items.
+
+// In home.js, good job consistently using escapeHtml() before rendering dynamic post fields into innerHTML 
+// This definately helps prevent injection issues.
+
+// A small suggestion:
+// In submit.js, manual calls to /api/upload are used instead of the existing uploadImage() API helper which is defined in your api.js
+// reusing it would have been simpler without duplicating the code.
+
